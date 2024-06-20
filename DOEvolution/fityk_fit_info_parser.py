@@ -3,9 +3,13 @@ import os
 import time
 import glob
 import re
-import csv
+import pandas as pd
+
+#start the timer
+start=time.time() 
+
 #%%
-# BATCH PROCESSING FILES TO REMOVE SPACES 
+# BATCH PROCESSING FILES TO REMOVE SPACES - WORKS
 # directory path
 raw_path_dir = r"G:\My Drive\PhD\Doktorat\FTIR analysis\Spektri master\Dekonvolucija\reports"
 os_path_dir = raw_path_dir.replace('\\', '/')
@@ -27,89 +31,109 @@ for file_path in file_paths:
         file.writelines(processed_lines)
 
 print("All files have been processed.")
-#%%%
-# TEST FOR PATTERN ON SINGLE FILE - PROBLEM WITH ESCAPE SEQUENCE
-# load the pattern
 
+
+#%%
+# TEST FOR PATTERN ON SINGLE FILE - WORKS
+
+# load file path
 raw_path = r"G:\My Drive\PhD\Doktorat\FTIR analysis\Spektri master\Dekonvolucija\reports\e1.txt"
-os_path_file = raw_path_dir.replace('\\', '/')
+os_path_file = raw_path.replace('\\', '/')
 file_path = os.path.abspath(os_path_file)
 
-pattern = re.compile(r"\\$\_\\d+\=%\_\d+\.(\w+)\=(-?\d+(?:\.\d+)?(?:e-?\d+)?)±(-?\d+(?:\.\d+)?(?:e-?\d+)?)")
+# define function to read file
+def read_file(file_path):
+    with open(file_path, mode = 'r', encoding = 'utf-8') as file:
+        return file.read()
+
+# define pattern    
+pattern = re.compile(r"\$_\d+=\%_\d+\.(\w+)=(\d+.\d+)±(\d+.\d+)")
+
+# read the file and check
+text = read_file(file_path)
+print("Your texts is:\n" + text)
+
+# find and check matches
+matches = re.findall(pattern, text)  
+print("Matches found:\n", matches)
+
+# add columns, put list into dataframe and check
+columns = ['param', 'value', 'error']
+df = pd.DataFrame(matches, columns = columns)
+print(df)
+
+# now extract file name form path
+file_name = os.path.basename(file_path)
+print("Your file name is:" + file_name)
+
+# split file name (delete .txt extension)
+file_name_ex = file_name.split('.')[0]
+
+# insert back into dataframe and check
+df.insert(0, 'spectrum', file_name_ex)
+print(df)
+
+#%%
+# BATCH PROCESS THE FILES
+
+# define function to read .txt files
+def read_file(file_path):
+    with open(file_path, mode = 'r', encoding = 'utf-8') as file:
+        return file.read()
+
+# load the pattern    
+pattern = re.compile(r"\$_\d+=\%_\d+\.(\w+)=(\d+.\d+)±(\d+.\d+)")
+
+# load the folder path
+folder_path = r"G:\My Drive\PhD\Doktorat\FTIR analysis\Spektri master\Dekonvolucija\reports"
+
+# empty list to store dataframes
+df_list = []
+
+
+# glob makes list of all .txt files within a folder
+file_paths = glob.glob(os.path.join(folder_path, '*.txt'))
+
+# loop to process each file
+for file_path in file_paths:
+    # make file path
     
-# match the pattern
-with open(file_path, 'r') as file:
-    for line in file:
-        match = re.match(pattern, line.strip())
-
-        param = match.group(1)
-        value = float(match.group(2))
-        uncertainty = float(match.group(3))
-        
-print(param, ' ', value, '±', uncertainty)
-
-
-
-
-
-'''
-def parse_line(line):
-    # load the pattern
-    pattern = r"\\$\_\\d+\=%\_\d+\.(\w+)\=(-?\d+(?:\.\d+)?(?:e-?\d+)?)±(-?\d+(?:\.\d+)?(?:e-?\d+)?)"
+    #read file
+    text = read_file(file_path)
+    #print("Your current text is:\n" + text)
     
-    # match the pattern
-    match = re.match(pattern, line.strip())
+    # find matches
+    matches = re.findall(pattern, text)
+    #print("Current matches found:\n", matches)
     
-    # if match is found, take parameter, value and uncertainty
-    # all required terms are in groups (in code as brackets '()')
-    # else do nothing
-    if match:
-        param = match.group(1)
-        value = float(match.group(2))
-        uncertainty = float(match.group(3))
-        return param, value, uncertainty
+    # add columns to dataframe
+    columns = ['param', 'value', 'error']
+    df = pd.DataFrame(matches, columns = columns)
+    #print(df)
     
-    return None
+    # now extract file name form path
+    file_name = os.path.basename(file_path)
+    print("Your file name is:" + file_name)
 
+    # split file name (delete .txt extension)
+    file_name_ex = file_name.split('.')[0]
 
-def process_file(input_file_path, output_file_path):
-    results = []
+    # insert back into dataframe and check
+    df.insert(0, 'spectrum', file_name_ex)
+    #print(df)
     
-    with open(input_file_path, 'r') as input_file:
-        for line in input_file:
-            parsed_result = parse_line(line)
-            if parsed_result:
-                results.append(parsed_result)
-            
-    with open(output_file_path, 'w', newline='') as output_file:
-        writer = csv.writer(output_file)
-        writer.writerow(['Parameter', 'Value', 'Uncertainty'])
-        writer.writerows(results)
-    
-    print(f"Processed results saved to {output_file_path}")
+    # Append DataFrame to list
+    df_list.append(df)
 
+print("All files have been processed.")      
+# Concatenate all DataFrames into a single DataFrame
+combined_df = pd.concat(df_list, ignore_index=True)
+print("Your combined dataframe is:\n", combined_df)
 
-
-input_file_path = 'G:/My Drive/PhD/Doktorat/FTIR analysis/Spektri master/Dekonvolucija/reports/e1.txt'
-output_file_path = 'G:/My Drive/PhD/Doktorat/FTIR analysis/Spektri master/Dekonvolucija/reports/e1_parsed.csv'
-
-process_file(input_file_path, output_file_path)
-'''
-'''
-#read file
-with open(file_path, 'r') as file:
-    for line in file:
-        result = parse_line(line)
-        
-        if result:
-            param, value, uncertainty = result
-            if param not in data:
-                data[param] = []
-            
-            data[param].append(value, uncertainty)
-            
-            
-# print the parsed data
-print(data)
-'''
-
+# save dataframe as .csv
+combined_df.to_csv("output.csv")
+end=time.time()
+print('Time elapsed (minutes):'
+	  , round((end-start)/60, 2), 
+	  '\nTime elapsed (seconds):', 
+	  round(end-start, 2))
