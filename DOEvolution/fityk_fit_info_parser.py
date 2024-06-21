@@ -90,7 +90,6 @@ folder_path = r"G:\My Drive\PhD\Doktorat\FTIR analysis\Spektri master\Dekonvoluc
 # empty list to store dataframes
 df_list = []
 
-
 # glob makes list of all .txt files within a folder
 file_paths = glob.glob(os.path.join(folder_path, '*.txt'))
 
@@ -124,14 +123,17 @@ for file_path in file_paths:
     
     # Append DataFrame to list
     df_list.append(df)
-
-print("All files have been processed.")      
+print("All files have been processed.")   
+   
 # Concatenate all DataFrames into a single DataFrame
 combined_df = pd.concat(df_list, ignore_index=True)
 print("Your combined dataframe is:\n", combined_df)
 
 # save dataframe as .csv
 combined_df.to_csv("output.csv")
+print("Dataframe saved")
+
+# stop the timer and measure time elapsed
 end=time.time()
 print('Time elapsed (minutes):'
 	  , round((end-start)/60, 2), 
