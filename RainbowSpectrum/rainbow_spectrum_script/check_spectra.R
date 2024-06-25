@@ -23,3 +23,29 @@ plot = ggplot(df_long, aes(x = wavenumber, y = value, color = variable)) +
 
 # Display the plot
 print(plot)
+
+# Check allignment of all spectra
+setwd('G:/My Drive/PhD/Doktorat/FTIR analysis/Spektri master')
+df2 = read.csv('master_data_table_transposed.csv')
+View(df2)
+
+library(ggplot2)
+library(tidyr)
+
+
+df2_long = pivot_longer(df2, cols = starts_with("i"), 
+                        names_to = "variable", 
+                        values_to = "value"
+                        )
+View(df2_long)
+
+
+ggplot(df2_long, aes(x = wavelenght, y = value, color = variable)) +
+  geom_line() +
+  theme_minimal() +
+  labs(title = "Multiple Intensity Variables Against Wavelength",
+       x = "Wavelength",
+       y = "Intensity",
+       color = "Variable") +
+  theme(plot.title = element_text(hjust = 0.5))
+
