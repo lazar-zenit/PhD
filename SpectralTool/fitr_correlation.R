@@ -1,8 +1,8 @@
 # set work directory
-setwd("G:/My Drive/PhD/Doktorat/FTIR analysis/Spektri master/Korelacija spektara")
+setwd("C:/Users/Lenovo/Documents/Programiranje/PhD/SpectralTool/datasets")
 
 # read and inspect dataframe
-df = read.csv('za korelaciju centralne tačke.csv')
+df = read.csv('central_points_bad.csv')
 View(df)
 
 # CHECK THE NORMALITY
@@ -37,15 +37,43 @@ ggplot(df_long, aes(x = wavenumber, y = value, color = variable)) +
        color = "Variable") +
   theme(plot.title = element_text(hjust = 0.5))
 
+# PREPARE DATA FOR COVARIANCE AND CORRELATION
+library(dplyr)
+selected_data = df %>% select(starts_with("c"))
+View(selected_data)
+
+#COVARIANCE
+cov_matrix = cov(selected_data)
+print(cov_matrix)
+
+# prepare matrix to be ploted as heatmap
+melted_cov = melt(cov_matrix)
+melted_cov$Var1 <- as.factor(melted_cov$Var1)
+melted_cov$Var2 <- as.factor(melted_cov$Var2)
+melted_cov$value <- as.numeric(melted_cov$value)
+
+#plot the heatmap
+ggplot(melted_cov, aes(x = Var1, y = Var2, fill = value)) +
+  geom_tile() +
+  scale_fill_gradient2(low = "blue", high = "red", mid = "white", 
+                       midpoint = median(melted_cov$value), limit = c(min(melted_cov$value), max(melted_cov$value)), space = "Lab", 
+                       name = "Covariance") +
+  theme_minimal() +
+  labs(title = "Covariance Matrix Heatmap",
+       x = "Variables",
+       y = "Variables") +
+  theme(axis.text.x = element_text(angle = 0, vjust = 1, 
+                                   size = 12, hjust = 1),
+        plot.title = element_text(hjust = 0.5))
 
 # CORRELATION
 # make correlation matrix
-cor_matrix = cor(df)
+cor_matrix = cor(selected_data)
 print(cor_matrix)
 
 # t-test for the matrix
 library(Hmisc)
-rcorr(as.matrix(df))
+rcorr(as.matrix(selected_data))
 
 # make data suitable for graphs
 library(reshape2)
@@ -58,8 +86,8 @@ ggplot(data = melted_cor, aes(x = Var1, y= Var2, fill = value)) +
   scale_fill_gradient2(low = "blue", 
                        high = "red", 
                        mid = "white",
-                       midpoint = 0.975, 
-                       limit = c(0.95,1), 
+                       midpoint = median(melted_cor$value), 
+                       limit = c(min(melted_cor$value), max(melted_cor$value)), 
                        space="Lab",
                        name="Pearson correlation\n of FTIR spectra") +
   theme_minimal() + 
@@ -68,12 +96,4 @@ ggplot(data = melted_cor, aes(x = Var1, y= Var2, fill = value)) +
                                    size = 12, 
                                    hjust = 1)) +
   coord_fixed()
-
-# alternative for simpler plotting
-library(corrplot)
-corrplot(cor_matrix)
-
-# CHECK THE GRAPH VISUALY
-#reshape the dataframe and check it
-
 
