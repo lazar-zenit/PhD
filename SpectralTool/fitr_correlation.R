@@ -2,7 +2,7 @@
 setwd("C:/Users/Lenovo/Documents/Programiranje/PhD/SpectralTool/datasets")
 
 # read and inspect dataframe
-df = read.csv('central_points_bad.csv')
+df = read.csv('central_points_good.csv')
 View(df)
 
 # CHECK THE NORMALITY
@@ -52,19 +52,22 @@ melted_cov$Var1 <- as.factor(melted_cov$Var1)
 melted_cov$Var2 <- as.factor(melted_cov$Var2)
 melted_cov$value <- as.numeric(melted_cov$value)
 
-#plot the heatmap
-ggplot(melted_cov, aes(x = Var1, y = Var2, fill = value)) +
-  geom_tile() +
-  scale_fill_gradient2(low = "blue", high = "red", mid = "white", 
-                       midpoint = median(melted_cov$value), limit = c(min(melted_cov$value), max(melted_cov$value)), space = "Lab", 
-                       name = "Covariance") +
-  theme_minimal() +
-  labs(title = "Covariance Matrix Heatmap",
-       x = "Variables",
-       y = "Variables") +
-  theme(axis.text.x = element_text(angle = 0, vjust = 1, 
-                                   size = 12, hjust = 1),
-        plot.title = element_text(hjust = 0.5))
+#plot the matrix
+ggplot(data = melted_cov, aes(x = Var1, y= Var2, fill = value)) +
+  geom_tile() + 
+  scale_fill_gradient2(low = "blue", 
+                       high = "red", 
+                       mid = "white",
+                       midpoint = median(melted_cov$value), 
+                       limit = c(min(melted_cov$value), max(melted_cov$value)), 
+                       space="Lab",
+                       name="Covariance\n of FTIR spectra") +
+  theme_minimal() + 
+  theme(axis.text.x = element_text(angle = 90, 
+                                   vjust = 1, 
+                                   size = 12, 
+                                   hjust = 1)) +
+  coord_fixed()
 
 # CORRELATION
 # make correlation matrix
