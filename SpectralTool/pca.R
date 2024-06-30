@@ -2,7 +2,7 @@
 setwd("C:/Users/Lenovo/Documents/Programiranje/PhD/SpectralTool/datasets")
 
 # read and inspect dataframe
-df = read.csv('central_points_good.csv')
+df = read.csv('central_points_bad.csv')
 View(df)
 
 # remove rows with 0, else scaling wont work
@@ -47,3 +47,13 @@ qplot(c(1:6), var_explained) +
   ylab("Variance Explained") +
   ggtitle("Scree Plot") +
   ylim(0, 1)
+
+library(ggplot2)
+
+# Convert scores to a data frame
+scores_df <- as.data.frame(results$x)
+
+# Assuming you want to plot the first two principal components (PC1 and PC2)
+ggplot(scores_df, aes(x = PC1, y = PC2)) +
+  geom_point() +
+  labs(x = "PC1", y = "PC2", title = "PCA Score Plot")
