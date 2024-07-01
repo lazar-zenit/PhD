@@ -1,0 +1,17 @@
+---
+title: "SpectralTool"
+output: html_notebook
+---
+
+This is an [R Markdown](http://rmarkdown.rstudio.com) Notebook of the SpectralTool project
+
+# What is this for?
+This set of tools and scripts is used to streamline work with spectra (mostly ATR-FTIR and UV/VIS). It should cover everything from handling raw spectra, preprocessing, reshaping tables and various types of analysis.
+
+# Contents
+- `omnic_breakoff.py`
+
+# omnic_breakoff.py
+This pythin script is used to batch prepare spectra for use in Open Specy spectral processing tool. Files is .csv format exported from Thermo's OMNIC software lack the header. OMNIC also exports whole range of instrument, meaning that if we analysed certain wavenumber range we will have extra data we don't need.
+
+

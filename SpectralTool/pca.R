@@ -2,7 +2,7 @@
 setwd("C:/Users/Lenovo/Documents/Programiranje/PhD/SpectralTool/datasets")
 
 # read and inspect dataframe
-df = read.csv('central_points_bad.csv')
+df = read.csv('test_all.csv')
 View(df)
 
 # remove rows with 0, else scaling wont work
@@ -27,33 +27,36 @@ View(df_pca)
 
 # CALCULATE PCs
 results = prcomp(df_pca, scale=TRUE)
+View(results)
 
 # reverse eigenvectors
 results$rotation = -1*results$rotation
-
 # dispay PCs
 results$rotation
 
-# biplot (useless in this case)
-biplot(results, scale = 0)
-
 #calculate total variance explained by each principal component
 var_explained = results$sdev^2 / sum(results$sdev^2)
-
+print(var_explained)
 #create scree plot
-qplot(c(1:6), var_explained) + 
+qplot(c(1:30), var_explained) + 
   geom_line() + 
   xlab("Principal Component") + 
   ylab("Variance Explained") +
   ggtitle("Scree Plot") +
   ylim(0, 1)
 
-library(ggplot2)
+# biplot (useless in this case)
+biplot(results, scale = 0)
 
 # Convert scores to a data frame
 scores_df <- as.data.frame(results$x)
 
 # Assuming you want to plot the first two principal components (PC1 and PC2)
-ggplot(scores_df, aes(x = PC1, y = PC2)) +
+library(ggplot2)
+ggplot(scores_df, aes(x = PC2, y = PC3)) +
   geom_point() +
   labs(x = "PC1", y = "PC2", title = "PCA Score Plot")
+
+# loadings plot
+install.packages('MASS')
+fviz_pca_var(results)
