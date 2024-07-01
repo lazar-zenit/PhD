@@ -28,4 +28,8 @@ Some of the approaches for assertaining the similarity:
 - t-tests and p-value chart
 
 # RainbowSpectrum
-Rainbow spectrum is nice visual representation of regions of spectra responsibile for variations between samples.
+Rainbow spectrum is nice visual representation of regions of spectra responsibile for variations between samples.It takes values of loadings from PCA and plots it as third axis (gradient line) on mean spectra of the samples. At present, Loadings are taken from Sartorius SIMCA software, and later we shoud be able to do this within R using `pca.r` script. 
+
+# pca.r
+
+# Data wrangle
