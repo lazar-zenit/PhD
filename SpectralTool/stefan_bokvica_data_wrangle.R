@@ -7,6 +7,5 @@ View(wheat)
 
 # remove zero columns
 library(dplyr)
-
-wheat_new = filter_if(wheat, is.numeric, all_vars((.) != 0))
+wheat_new <- subset(wheat, rowSums(data != 0) > 0)
 View(wheat_new)
