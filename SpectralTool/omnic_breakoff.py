@@ -9,18 +9,17 @@ start = time.time()
 
 def dataframe_clean(file_path):
     # open the .csv file, ignore first row as header
-    df = pd.read_csv(file_path, 
-                     index_col=False, 
-                     names=["wavenumber", "intensity"])
-
-    # delete certain wavenumbers
-    min_wavenumber = 600
-    max_wavenumber = 1800
-
-    clean_df = df[(df['wavenumber'] >= min_wavenumber) & 
-            (df['wavenumber'] <= max_wavenumber)]
+    df = pd.read_csv(file_path)
     
-    return clean_df
+    # Drop the first row
+    df = df.drop(df.index[0])
+
+    # Reset index if necessary
+    df = df.reset_index(drop=True)
+    
+    # add new column names
+    df.columns = ['wavenumber', 'intensity']
+    return df
 
 
 def process_files(input_pattern, output_dir):
@@ -52,7 +51,7 @@ def process_files(input_pattern, output_dir):
         print(f"Saved cleaned file to: {os.path.join(output_dir, new_name)}\n")
 
 
-input_pattern = "C:/Users/Lenovo/Documents/Programiranje/PhD/SpectralTool/datasets/omnic_breakoff_input/Lazar *.csv"
+input_pattern = "C:/Users/Lenovo/Documents/Programiranje/PhD/SpectralTool/datasets/viminacijum_out/PedjaMono*_processed.csv"
 output_dir = "C:/Users/Lenovo/Documents/Programiranje/PhD/SpectralTool/datasets/omnic_breakoff_output"
 
 process_files(input_pattern, output_dir)

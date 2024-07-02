@@ -8,11 +8,10 @@ This is an [R Markdown](http://rmarkdown.rstudio.com) Notebook of the SpectralTo
 # What is this for?
 This set of tools and scripts is used to streamline work with spectra (mostly ATR-FTIR and UV/VIS). It should cover everything from handling raw spectra, preprocessing, reshaping tables and various types of analysis.
 
-# Contents
-- `omnic_breakoff.py`
+# Opening .spa and preparing for openspecy.py
+This python script is used to batch prepare spectra for use in Open Specy spectral processing tool. Files in .spa format are opened, baseline corrected and saved as .csv by `spa_converter_baseline_correction.py`, and column names are changed by `omnic_breakoff.py`.
 
-# omnic_breakoff.py
-This python script is used to batch prepare spectra for use in Open Specy spectral processing tool. Files is .csv format exported from Thermo's OMNIC software lack the header. OMNIC also exports whole range of instrument, meaning that if we analysed certain wavenumber range we will have extra data we don't need.
+This should prepare spectra for use in `openspecy.r`.
 
 # Open Specy processing
 Open Specy is free and open-sorce R-package for spectral processing that also has a [web app](https://openanalysis.org/openspecy/). Files made by `omnic_brakeoff.py` should be importable as such into the webb app and analysed there. When spectra had been analysed, it will be bulk exported, so `openspecy_splitter.py` should be used in order to provide input files for the Fityk.
