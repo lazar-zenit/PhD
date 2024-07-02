@@ -16,6 +16,7 @@ This python script is used to batch prepare spectra for use in Open Specy spectr
 
 # Open Specy processing
 Open Specy is free and open-sorce R-package for spectral processing that also has a [web app](https://openanalysis.org/openspecy/). Files made by `omnic_brakeoff.py` should be importable as such into the webb app and analysed there. When spectra had been analysed, it will be bulk exported, so `openspecy_splitter.py` should be used in order to provide input files for the Fityk.
+The process will be within R enviroment at the later date within `openspecy.r`
 
 # Checking correlation within replicates and/or central points
 One of the main issues with spectral data and multivariate analysis is reproducibility. In order to assertain reproducibilizy it is usefull to check degree of which spectra of the samples with same parameters are correlated with each other. Poor similarity between said spectra indicates that our system is not under control and all othher statistical analysis can not be certain.
@@ -26,6 +27,8 @@ Some of the approaches for assertaining the similarity:
 - Pearson's correlation
 - Spectrum Angle Mapping (SAM)
 - t-tests and p-value chart
+
+Tool is within `spectral_correlation.r`.
 
 # RainbowSpectrum
 Rainbow spectrum is nice visual representation of regions of spectra responsibile for variations between samples.It takes values of loadings from PCA and plots it as third axis (gradient line) on mean spectra of the samples. At present, Loadings are taken from Sartorius SIMCA software, and later we shoud be able to do this within R using `pca.r` script. 
