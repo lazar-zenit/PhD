@@ -2,19 +2,20 @@
 setwd("C:/Users/Lenovo/Documents/Programiranje/PhD/SpectralTool/datasets")
 
 # read and inspect dataframe
-df = read.csv('central_points_good.csv')
+df = read.csv('all_spectra_std_order_corr_test.csv')
 View(df)
 
 # CHECK THE NORMALITY
 # vizualize distribution to check normality
 #reshape the dataframe and check it
 library(tidyr)
-df_long = pivot_longer(df, cols = starts_with("c"), 
+df_long = pivot_longer(df, cols = starts_with("i"), 
                        names_to = "variable", 
                        values_to = "value")
 # plot the histograms
+library(ggplot2)
 ggplot(df_long, aes(x = value, fill = variable)) + 
-  geom_histogram(bins = 30, 
+  geom_histogram(bins = 20, 
                  alpha = 0.6, 
                  position = 'identity') +
   facet_wrap(~ variable, 
@@ -39,7 +40,7 @@ ggplot(df_long, aes(x = wavenumber, y = value, color = variable)) +
 
 # PREPARE DATA FOR COVARIANCE AND CORRELATION
 library(dplyr)
-selected_data = df %>% select(starts_with("c"))
+selected_data = df %>% select(starts_with("i"))
 View(selected_data)
 
 #COVARIANCE
@@ -100,3 +101,35 @@ ggplot(data = melted_cor, aes(x = Var1, y= Var2, fill = value)) +
                                    hjust = 1)) +
   coord_fixed()
 
+
+# DIFFERENTIATE SPECIIC SPECTRA
+library(ggplot2)
+
+# Highlight specific spectra 
+highlight_spectra = "i20"
+
+# Base plot
+plot = ggplot(df_long, aes(x = wavenumber, y = value, color = variable)) +
+  geom_line() +
+  theme_minimal() +
+  labs(title = "Multiple Intensity Variables Against Wavelength",
+       x = "Wavelength",
+       y = "Intensity",
+       color = "Variable") +
+  theme(plot.title = element_text(hjust = 0.5))
+
+# subplot
+plot = plot +
+  geom_line(data = subset(df_long, variable == highlight_spectra),
+            aes(x = wavenumber, 
+                y = value, 
+                color = variable),
+                size = 0.75) + # Customize size and linetype
+  scale_color_manual(values = setNames(c("red", 
+                                         rep("grey50", 
+                                             length(unique(df_long$variable)) - 1)), 
+                                       c(highlight_spectra, 
+                                         setdiff(unique(df_long$variable), 
+                                                 highlight_spectra))))
+
+print(plot)
