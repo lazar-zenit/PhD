@@ -90,7 +90,7 @@ ggplot(data = melted_cor, aes(x = Var1, y= Var2, fill = value)) +
   scale_fill_gradient2(low = "blue", 
                        high = "red", 
                        mid = "white",
-                       midpoint = median(melted_cor$value), 
+                       midpoint = 0.90, # first set median(melted_cor$value), then change
                        limit = c(min(melted_cor$value), max(melted_cor$value)), 
                        space="Lab",
                        name="Pearson correlation\n of FTIR spectra") +

@@ -1,14 +1,19 @@
+# IMPORT DATA
 # set work directory
 setwd("C:/Users/Lenovo/Documents/Programiranje/PhD/SpectralTool/datasets")
 
 # read and inspect dataframe
-df = read.csv('test_all.csv')
+df = read.csv('all_spectra_std_order_corr_test.csv')
 View(df)
 
-# remove rows with 0, else scaling wont work
+#load libraries
+library(ggplot2)
 library(dplyr)
+
+# remove rows with 0, else scaling wont work
 df = df[apply(df!=0, 1, all),]
 View(df)
+
 
 # TRANSPOSE DATAFRAME, TIDY UP AND INSPECT
 # tranpose
@@ -36,27 +41,71 @@ results$rotation
 
 #calculate total variance explained by each principal component
 var_explained = results$sdev^2 / sum(results$sdev^2)
+var_cumulative = cumsum(var_explained)
 print(var_explained)
-#create scree plot
-qplot(c(1:30), var_explained) + 
-  geom_line() + 
-  xlab("Principal Component") + 
-  ylab("Variance Explained") +
-  ggtitle("Scree Plot") +
-  ylim(0, 1)
+print(var_cumulative)
 
-# biplot (useless in this case)
+# make results dataframe
+var_results = data.frame(PC = 1:length(var_explained),
+                    ExplainedVariance = var_explained,
+                    CumulativeVariance = var_cumulative)
+
+
+ggplot(var_results, aes(x = PC)) +
+  geom_bar(aes(y = ExplainedVariance * 100), 
+           stat = "identity", 
+           fill = "steelblue") +
+  geom_line(aes(y = CumulativeVariance * 100), 
+            color = "red", 
+            size = 1) +
+  geom_point(aes(y = CumulativeVariance * 100), 
+             color = "red", 
+             size = 2) +
+  labs(title = "Scree Plot",
+       x = "Principal Component",
+       y = "Percentage of Variance Explained") +
+  theme_minimal() +
+  scale_y_continuous(sec.axis = sec_axis(~ ., name = "Cumulative Variance Explained (%)")) +
+  theme(plot.title = element_text(hjust = 0.5))
+
+
+# biplot
 biplot(results, scale = 0)
 
-# Convert scores to a data frame
-scores_df <- as.data.frame(results$x)
+#manual biplot
+scores = as.data.frame(results$x)
+loadings = as.data.frame(results$rotation)
+pca_df = data.frame(scores, Sample = rownames(scores))
+loadings_df = data.frame(loadings, Variable = rownames(loadings))
+View(loadings_df)
 
-# Assuming you want to plot the first two principal components (PC1 and PC2)
-library(ggplot2)
-ggplot(scores_df, aes(x = PC2, y = PC3)) +
-  geom_point() +
-  labs(x = "PC1", y = "PC2", title = "PCA Score Plot")
 
-# loadings plot
-install.packages('MASS')
-fviz_pca_var(results)
+
+ggplot() +
+  geom_point(data = pca_df, aes(x = PC1, y = PC2, color = Sample), size = 2) +
+  geom_segment(data = loadings_df, aes(x = 0, y = 0, xend = PC1 * 100, yend = PC2 * 100), 
+               arrow = arrow(length = unit(0.2, "cm")), color = "red") +
+  #geom_text(data = loadings_df, aes(x = PC1 * 120, y = PC2 * 120, label = Variable), 
+            #color = "black", vjust = 1.5) +
+  geom_text(data = pca_df, aes(x = PC1, y = PC2, label = Sample), 
+            vjust = -0.5, hjust = 1.5, size = 3) +
+  labs(title = "PCA Biplot",
+       x = "Principal Component 1",
+       y = "Principal Component 2") +
+  theme_minimal()
+theme(plot.title = element_text(hjust = 0.5))
+
+
+# EXPORT LOADINGS FOR USE IN RAINBOW CHART - df and loadings_df
+# merge dataframes by row indices
+print(df)
+print(loadings_df)
+rownames(loadings_df) = loadings_df$wavenumber
+loadings_df$wavenumber = NULL
+View(loadings_df)
+
+output_df = merge(df, loadings_df, by = 0)
+rownames(output_df) = NULL
+View(output_df)
+
+
