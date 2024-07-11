@@ -108,4 +108,5 @@ output_df = merge(df, loadings_df, by = 0)
 rownames(output_df) = NULL
 View(output_df)
 
+write.csv(output_df, "loadings_for_rainbow.csv", row.names = FALSE)
 

@@ -7,27 +7,34 @@ library(dplyr)
 library(scales)
 library(patchwork)
 
-df = read.csv("master_data_table_transposed.csv")
+df = read.csv("loadings_for_rainbow.csv")
 View(df)
 
+
+#sort
+df <- df %>% arrange(wavenumber)
+
+# make mean intensity column
+df$mean_intensity <- rowMeans(df[, grep("^i\\d+$", names(df))])
+
 # check the mean spectre
-plot(df$wavelenght, df$mean_intensity, type="l")
+plot(df$wavenumber, df$mean_intensity, type="l")
 
 # Distribution of loadings - p1
 par(mfrow = c(1,1))
-hist(df$p1, freq = FALSE)
+hist(df$P1, freq = FALSE)
 dens1 = density(df$p1)
 lines(dens1, lwd=2, col = "red")
 
 # Distribution of loadings -p2
 par(mfrow = c(1,1))
-hist(df$p2, freq = FALSE)
+hist(df$P2, freq = FALSE)
 dens2 = density(df$p2)
 lines(dens2, lwd=2, col = "red")
 
 # Distribution of loadings -p3
 par(mfrow = c(1,1))
-hist(df$p3, freq = FALSE)
+hist(df$P3, freq = FALSE)
 dens3 = density(df$p3)
 lines(dens3, lwd=2, col = "red")
 
