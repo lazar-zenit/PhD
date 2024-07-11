@@ -5,15 +5,24 @@ setwd("C:/Users/Lenovo/Documents/Programiranje/PhD/SpectralTool/datasets")
 df = read.csv('all_spectra_std_order_corr_test.csv')
 View(df)
 
-# CHECK THE NORMALITY
+# load the libraries
+library(ggplot2)
+library(tidyr)
+library(dplyr)
+library(Hmisc)
+library(reshape2)
+
+######################
+# CHECK THE NORMALITY#
+######################
+
 # vizualize distribution to check normality
 #reshape the dataframe and check it
-library(tidyr)
+
 df_long = pivot_longer(df, cols = starts_with("i"), 
                        names_to = "variable", 
                        values_to = "value")
 # plot the histograms
-library(ggplot2)
 ggplot(df_long, aes(x = value, fill = variable)) + 
   geom_histogram(bins = 20, 
                  alpha = 0.6, 
@@ -27,7 +36,11 @@ ggplot(df_long, aes(x = value, fill = variable)) +
        fill = "Variable") +
   theme(plot.title = element_text(hjust = 0.5))
 
-# VISUAL INSPECTION
+
+####################
+# VISUAL INSPECTION#
+####################
+
 # plot the all spectral lines
 ggplot(df_long, aes(x = wavenumber, y = value, color = variable)) +
   geom_line() +
@@ -38,10 +51,15 @@ ggplot(df_long, aes(x = wavenumber, y = value, color = variable)) +
        color = "Variable") +
   theme(plot.title = element_text(hjust = 0.5))
 
-# PREPARE DATA FOR COVARIANCE AND CORRELATION
-library(dplyr)
+
+#############################
+# COVARIANCE AND CORRELATION#
+#############################
+
+# prepare the data
 selected_data = df %>% select(starts_with("i"))
 View(selected_data)
+
 
 #COVARIANCE
 cov_matrix = cov(selected_data)
@@ -70,21 +88,20 @@ ggplot(data = melted_cov, aes(x = Var1, y= Var2, fill = value)) +
                                    hjust = 1)) +
   coord_fixed()
 
+
 # CORRELATION
+
 # make correlation matrix
 cor_matrix = cor(selected_data)
 print(cor_matrix)
 
 # t-test for the matrix
-library(Hmisc)
 rcorr(as.matrix(selected_data))
 
 # make data suitable for graphs
-library(reshape2)
 melted_cor = melt(cor_matrix)
 
 # plot the correlation matrix
-library(ggplot2)
 ggplot(data = melted_cor, aes(x = Var1, y= Var2, fill = value)) +
   geom_tile() + 
   scale_fill_gradient2(low = "blue", 
@@ -102,8 +119,9 @@ ggplot(data = melted_cor, aes(x = Var1, y= Var2, fill = value)) +
   coord_fixed()
 
 
-# DIFFERENTIATE SPECIIC SPECTRA
-library(ggplot2)
+################################
+# HIGHLIGHT SPECTRA OF INTEREST#
+################################
 
 # Highlight specific spectra 
 highlight_spectra = "i20"
