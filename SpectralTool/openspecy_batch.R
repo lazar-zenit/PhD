@@ -1,5 +1,13 @@
+# start the timer
+start_time = Sys.time()
+
 # setup working directory
 setwd("C:/Users/Lenovo/Documents/Programiranje/PhD/SpectralTool/datasets/omnic_breakoff_input/csv files")
+
+
+# select range of your wavenumbers
+min_wavenumber = 900
+max_wavenumber = 1800
 
 # load the libraries
 library(OpenSpecy)
@@ -53,6 +61,7 @@ ggplot(all_data_raw, aes(x = wavenumber, y = intensity, color = File)) +
 ######################
 process_spectra = function(file_name){
   data = read_text(file_name)
+
   
   # baseline correction
   data_1 = subtr_baseline(data,
@@ -62,25 +71,17 @@ process_spectra = function(file_name){
                           make_rel = TRUE
   ) 
   
-  # smooth
-  data_2 = smooth_intens(data_1,
-                         polynomal = 4,
-                         window = 49, 
-                         derivative = 0,
-                         type = "wh",
-                         lambda = 10500,
-                         d = 2
-  )
 
-  # smooth
-  data_3 = smooth_intens(data_2,
+  # smooth - Savinsky-Golay
+  data_2 = smooth_intens(data_1,
                          polynomal = 4,
                          window = 49, 
                          derivative = 0,
                          type = "sg"
   )
-  
-  processed_data = as.data.frame(data_3)
+
+
+  processed_data = as.data.frame(data_2)
   colnames(processed_data) = c("wavenumber", "intensity") # Ensure correct column names
   processed_data$File = file_name
   
@@ -91,7 +92,10 @@ process_spectra = function(file_name){
 for (file in file_list) {
   processed_data = process_spectra(file)
   all_data = bind_rows(all_data, processed_data)
+  
 }
+
+write.csv(all_data, "output_openspecy.csv", row.names=FALSE)
 
 ggplot(all_data, aes(x = wavenumber, y = intensity, color = File)) +
   geom_line() +
@@ -105,3 +109,7 @@ ggplot(all_data, aes(x = wavenumber, y = intensity, color = File)) +
   labs(title = "Processed Spectral Data",
        x = "Wavenumber",
        y = "Intensity")
+
+# End the timer and calculate time elapsed
+end_time = Sys.time()
+print(end_time - start_time)
