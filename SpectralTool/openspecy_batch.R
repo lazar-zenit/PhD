@@ -61,14 +61,20 @@ ggplot(all_data_raw, aes(x = wavenumber, y = intensity, color = File)) +
 ######################
 process_spectra = function(file_name){
   data = read_text(file_name)
+  
+  # trim spectrum
+  data_filtered = restrict_range(data,
+                                 min = min_wavenumber,
+                                 max = max_wavenumber
+                                 )
 
   
   # baseline correction
-  data_1 = subtr_baseline(data,
+  data_1 = subtr_baseline(data_filtered,
                           type = "polynomial",
                           degree = 8,
                           raw = TRUE,
-                          make_rel = TRUE
+                          make_rel = TRUE,
   ) 
   
 
