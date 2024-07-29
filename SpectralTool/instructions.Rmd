@@ -33,5 +33,13 @@ Tool is within `spectral_correlation.r`.
 Rainbow spectrum is nice visual representation of regions of spectra responsibile for variations between samples.It takes values of loadings from PCA and plots it as third axis (gradient line) on mean spectra of the samples. At present, Loadings are taken from Sartorius SIMCA software, and later we shoud be able to do this within R using `pca.r` script. 
 
 # pca.r
+Script for doing principal component analysis. Has some custom manual graphs in ggplot2 as well as automatic graphs from the library. It ised to generate loadings for RainBow spectrum, and parts of it are copy/pasted for use in procrustes analysis
 
 # Data wrangle
+TBA
+
+# Procrustes analysis
+It is used to compare methods of spectral preprocessing. Each batch of processed spectra is put through PCA and procrusts analysis is performed. If signficance is below 0.05 there is significant correlation between methods of preprocessing. Can be used to assertain how much different parameters from openscpecy.r wuld have before doing analysis.
+
+# spectral_corellation.r
+After optimal parameters for automatic batch preprocessing of spectra is founf (using procrusts.r), reproducibility tests are performed. Replicates or samples with identical compositions should be put though this in order to see degree of matching. If spectra differ, there is problem with reproducibility and shadow of dobut looms over entire experiment. Tools within this should include classic significance tests and some bodged solutions, as well as replicates in context of entire samples. WORK IN PROGRESS
