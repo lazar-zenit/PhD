@@ -51,9 +51,9 @@ plot_2 = ggplot(df2_long, aes(x = wavenumber, y = value, color = variable)) +
 grid.arrange(plot_1, plot_2, ncol = 2)
 
 
-###############################
-#PREPROCESS DATAFRAMES FOR PCA#
-###############################
+#################################
+# PREPROCESS DATAFRAMES FOR PCA #
+#################################
 
 # remove rows with 0, else scaling wont work
 df_1 = df_1[apply(df_1!=0, 1, all),]
@@ -96,9 +96,9 @@ results_1$rotation
 results_2$rotation
 
 # automatic biplot
-biplot_1 = biplot(results_1, scale = 0)
-biplot_2 = biplot(results_2, scale = 0)
-grid.arrange(biplot_1, biplot_2, ncol = 2)
+par(mfrow = c(1, 2))
+biplot(results_1, scale = 0)
+biplot(results_2, scale = 0)
 
 
 ###############################
@@ -106,12 +106,53 @@ grid.arrange(biplot_1, biplot_2, ncol = 2)
 ###############################
 
 # perform procrustes analyses
-pro = procrustes(X = results_1, Y = results_2, symmetric = TRUE) 
+pro = procrustes(X = results_1, 
+                 Y = results_2, 
+                 symmetric = TRUE, 
+                 scale = TRUE) 
 print(pro)
 
 # plot the results
 plot(pro, kind = 1, type = "text")
 plot(pro, kind = 2)
 
+par(mfrow = c(1,1))
+plot(pro)
+text(pro,
+     display ="target",
+     col = "red",
+     pos = 4,
+     cex = 0.6)
+
 # perform procrustes randomization test
-protest(X = results_1, Y = results_2, scores = "sites", permutations = 9999)
+protest(X = results_1, 
+        Y = results_2, 
+        scores = "sites", 
+        permutations = 9999)
+
+
+#######################
+# PERFORM MANTEL TEST #
+#######################
+
+# take out the scores from first two principal components
+scores_1 = results_1$x[, 1:2]
+scores_2 = results_2$x[, 1:2]
+
+# check the dimensions - matrices must be the same dimensions
+dim(scores_1)
+dim(scores_2)
+
+# make distance matrix from derived scores
+dist_1 = dist(scores_1)
+dist_2 = dist(scores_2)
+
+# perform the Mantel test
+mantel_result = mantel(dist_1, 
+                       dist_2, 
+                       method = "pearson",
+                       permutations = 9999)
+print(mantel_result)
+
+
+
