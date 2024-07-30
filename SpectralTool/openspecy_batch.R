@@ -27,7 +27,7 @@ all_data = data.frame()
 # CHECK RAW SPECTRA #
 #####################
 
-# plot the raw data for inspection
+# load spectra
 read_raw_spectra = function(file_name) {
   data = read_text(file_name)
   data_frame = as.data.frame(data)
@@ -42,6 +42,7 @@ for (file in file_list) {
   all_data_raw = bind_rows(all_data_raw, raw_data)
 }
 
+# plot spectra to inspect
 ggplot(all_data_raw, aes(x = wavenumber, y = intensity, color = File)) +
   geom_line() +
   facet_wrap(~ File, scales = "free_y") +
@@ -110,12 +111,12 @@ ggplot(all_data, aes(x = wavenumber, y = intensity, color = File)) +
   theme(
     axis.text.x = element_blank(),
     axis.text.y = element_blank(),
-    plot.title = element_text(hjust = 0.5)
+    plot.title = element_text(hjust = 0.5)http://127.0.0.1:21689/graphics/20c04b87-c801-4a87-b9a2-30e3e1539cb3.png
   ) +
   labs(title = "Processed Spectral Data",
        x = "Wavenumber",
        y = "Intensity")
 
-# End the timer and calculate time elapsed
+# End the timer an        d calculate time elapsed
 end_time = Sys.time()
 print(end_time - start_time)

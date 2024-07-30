@@ -7,6 +7,9 @@ import glob
 #start the timer
 start = time.time()
 
+min_wavenumber = 800
+max_wavenumber = 1800
+
 def dataframe_clean(file_path):
     # open the .csv file, ignore first row as header
     df = pd.read_csv(file_path)
@@ -18,7 +21,10 @@ def dataframe_clean(file_path):
     df = df.reset_index(drop=True)
     
     # add new column names
-    df.columns = ['wavenumber', 'intensity']
+    df.columns = ['Wavenumber', 'Intensity']
+    
+    df = df[(df['Wavenumber'] >= min_wavenumber) & (df['Wavenumber'] <= max_wavenumber)]
+    
     return df
 
 
@@ -44,15 +50,15 @@ def process_files(input_pattern, output_dir):
         
         # get the base name and make new name
         base_name = os.path.basename(file_path)
-        new_name = f"{base_name}-for_spectral_processing.csv"
+        new_name = f"{base_name}_breakoff.csv"
         
         # save cleaned file
         clean_df.to_csv(os.path.join(output_dir, new_name), index=False)
         print(f"Saved cleaned file to: {os.path.join(output_dir, new_name)}\n")
 
 
-input_pattern = "C:/Users/Lenovo/Documents/Programiranje/PhD/SpectralTool/datasets/viminacijum_out/PedjaMono*_processed.csv"
-output_dir = "C:/Users/Lenovo/Documents/Programiranje/PhD/SpectralTool/datasets/omnic_breakoff_output"
+input_pattern = "C:/Users/Lenovo/Documents/Programiranje/PhD/SpectralTool/datasets/omnic_processed/input/Lazar_omnic_*.CSV"
+output_dir = "C:/Users/Lenovo/Documents/Programiranje/PhD/SpectralTool/datasets/omnic_processed/output"
 
 process_files(input_pattern, output_dir)
 
