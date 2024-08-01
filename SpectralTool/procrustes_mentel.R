@@ -105,30 +105,32 @@ biplot(results_2, scale = 0)
 # PERFORM PROCRUSTES ANALYSIS #
 ###############################
 
-# perform procrustes analyses
+# perform procrustes
 pro = procrustes(X = results_1, 
-                 Y = results_2, 
+                 Y = results_4, 
                  symmetric = TRUE, 
                  scale = TRUE) 
+# print the results
 print(pro)
 
-# plot the results
-plot(pro, kind = 1, type = "text")
+# remove "site" part of labels
+labels = rownames(pro$X)
+labels = gsub("site", "", labels)
+
+# plot the results - two plots
+par(mfrow = c(1, 2))
+plot(pro, kind = 1, type = "n")
 plot(pro, kind = 2)
 
+# plot the results - one plot
 par(mfrow = c(1,1))
 plot(pro)
-text(pro,
-     display ="target",
-     col = "red",
-     pos = 4,
-     cex = 0.6)
-
-# perform procrustes randomization test
-protest(X = results_1, 
-        Y = results_2, 
-        scores = "sites", 
-        permutations = 9999)
+text(pro$X, 
+     labels = labels, 
+     col = "black", 
+     pos = 4, 
+     cex = 0.6
+)
 
 
 #######################
