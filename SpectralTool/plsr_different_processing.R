@@ -1,14 +1,16 @@
 # import libraries
 library(dplyr)
+library(pls)
 
 # set up working directory
+
 setwd("C:/Users/Lenovo/Documents/Programiranje/PhD/SpectralTool/datasets/plsr")
 
 # import data
 s1 = read.csv("for_split_omnic.csv")
 s2 = read.csv("for_split_spectragryph.csv")
-s3 = read.csv("for_split_openspecy_r.csv")
-s4 = read.csv("for_split_openspecy_webapp.csv")
+s3 = read.csv("for_split_openspecy_webapp.csv")
+s4 = read.csv("for_split_openspecy_r.csv")
 
 # inspect dataframes
 View(s1)
@@ -95,4 +97,33 @@ write.csv(s4_test, "DPP4_test.csv", row.names=FALSE)
 # BUILD AND TEST PLSR MODELS #
 ##############################
 
-model <- plsr(octane ~ ., data = my_data, validation = "LOO")
+#------#
+# DPP1 #
+#------#
+
+# import the data with dependant and independant variables
+d1_train = read.csv("DPP1_train.csv")
+d1_test = read.csv("DPP1_test.csv")
+View(d1_train)
+View(d1_test)
+
+# train the model
+model1 <- plsr(Yields ~ ., data = d1_train, validation = "LOO")
+summary(model1)
+
+# validation and component number
+validationplot(model1)
+validationplot(model1, val.type="MSEP")
+validationplot(model1, val.type="R2")
+
+# make a predicion to training data
+m1_pred <- predict(model1, d1_test, ncomp=7)
+
+sqrt(mean((m1_pred - d1_test$Yields)^2))
+
+# plot pred vs actual
+plot(d1_test$Yields, m1_pred, 
+    xlab = "Actual Values", 
+    ylab = "Predicted Values", 
+    main = "Actual vs Predicted Values")
+abline(0, 1, col = "red")  # Add a y=x line for reference
