@@ -108,7 +108,7 @@ View(d1_train)
 View(d1_test)
 
 # train the model
-model1 <- plsr(Yields ~ ., data = d1_train, validation = "LOO")
+model1 <- plsr(Yields ~ ., data = d1_train, validation = "CV")
 summary(model1)
 
 # validation and component number
@@ -121,9 +121,147 @@ m1_pred <- predict(model1, d1_test, ncomp=7)
 
 sqrt(mean((m1_pred - d1_test$Yields)^2))
 
+# Linear model of Pred. vs. Actual
+lm1 = lm(m1_pred ~ d1_test$Yields)
+summary(lm1)
+
 # plot pred vs actual
 plot(d1_test$Yields, m1_pred, 
     xlab = "Actual Values", 
     ylab = "Predicted Values", 
-    main = "Actual vs Predicted Values")
+    main = "Actual vs Predicted Values - OMNIC",
+    xlim = c(0, 25),
+    ylim = c(0, 25),
+    col = "black",
+    pch = 16
+    )
 abline(0, 1, col = "red")  # Add a y=x line for reference
+abline(lm1, col = "blue")
+
+#------#
+# DPP2 #
+#------#
+
+# import the data with dependant and independant variables
+d2_train = read.csv("DPP2_train.csv")
+d2_test = read.csv("DPP2_test.csv")
+View(d2_train)
+View(d2_test)
+
+# train the model
+model2 <- plsr(Yields ~ ., data = d2_train, validation = "CV")
+summary(model2)
+
+# validation and component number
+validationplot(model2)
+validationplot(model2, val.type="MSEP")
+validationplot(model2, val.type="R2")
+
+# make a predicion to training data
+m2_pred <- predict(model2, d2_test, ncomp=8)
+
+sqrt(mean((m2_pred - d2_test$Yields)^2))
+
+# Linear model of Pred. vs. Actual
+lm2 = lm(m2_pred ~ d2_test$Yields)
+summary(lm2)
+
+# plot pred vs actual
+plot(d2_test$Yields, m2_pred, 
+     xlab = "Actual Values", 
+     ylab = "Predicted Values", 
+     main = "Actual vs Predicted Values - Spectragryph",
+     xlim = c(0, 25),
+     ylim = c(0, 25),
+     col = "black",
+     pch = 16
+     )
+abline(0, 1, col = "red")
+abline(lm2, col = "blue")
+
+#------#
+# DPP3 #
+#------#
+
+# import the data with dependant and independant variables
+d3_train = read.csv("DPP3_train.csv")
+d3_test = read.csv("DPP3_test.csv")
+View(d3_train)
+View(d3_test)
+
+# train the model
+model3 <- plsr(Yields ~ ., data = d3_train, validation = "CV")
+summary(model3)
+
+# validation and component number
+validationplot(model3)
+validationplot(model3, val.type="MSEP")
+validationplot(model3, val.type="R2")
+
+# make a predicion to training data
+m3_pred <- predict(model3, d3_test, ncomp=8)
+
+sqrt(mean((m3_pred - d3_test$Yields)^2))
+
+# Linear model of Pred. vs. Actual
+lm3 = lm(m3_pred ~ d3_test$Yields)
+summary(lm3)
+
+# plot pred vs actual
+plot(d3_test$Yields, m3_pred, 
+     xlab = "Actual Values", 
+     ylab = "Predicted Values", 
+     main = "Actual vs Predicted Values - Opencpecy (Webapp)",
+     xlim = c(0, 25),
+     ylim = c(0, 25),
+     col = "black",
+     pch = 16
+     )
+abline(0, 1, col = "red")
+abline(lm3, col = "blue")
+
+#------#
+# DPP4 #
+#------#
+
+# import the data with dependant and independant variables
+d4_train = read.csv("DPP4_train.csv")
+d4_test = read.csv("DPP4_test.csv")
+View(d4_train)
+View(d4_test)
+
+# train the model
+model4 <- plsr(Yields ~ ., data = d4_train, validation = "CV")
+summary(model4)
+
+# validation and component number
+validationplot(model4)
+validationplot(model4, val.type="MSEP")
+validationplot(model4, val.type="R2")
+
+# make a predicion to training data
+m4_pred <- predict(model4, d4_test, ncomp=9)
+
+sqrt(mean((m4_pred - d4_test$Yields)^2))
+
+# Linear model of Pred. vs. Actual
+lm4 = lm(m4_pred ~ d4_test$Yields)
+summary(lm4)
+
+# plot pred vs actual
+plot(d4_test$Yields, m4_pred, 
+     xlab = "Actual Values", 
+     ylab = "Predicted Values", 
+     main = "Actual vs Predicted Values - Opencpecy (R)",
+     xlim = c(0, 25),
+     ylim = c(0, 25),
+     pch = 16
+     )
+abline(0, 1, col = "red")  # Add a y=x line for reference
+abline(lm1, col = "blue")
+
+
+# F-test for linear regression
+var.test(d4_test$Yields, m4_pred)
+
+# perform linear regression to obtain figures of merit
