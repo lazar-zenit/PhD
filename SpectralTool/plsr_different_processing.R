@@ -240,7 +240,7 @@ validationplot(model4, val.type="MSEP")
 validationplot(model4, val.type="R2")
 
 # make a predicion to training data
-m4_pred <- predict(model4, d4_test, ncomp=9)
+m4_pred <- predict(model4, d4_test, ncomp=5)
 
 sqrt(mean((m4_pred - d4_test$Yields)^2))
 
