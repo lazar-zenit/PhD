@@ -11,7 +11,7 @@ max_wavenumber = 1800
 
 # load the libraries
 library(OpenSpecy)
-library(ggplot2)
+R.versionlibrary(ggplot2)
 library(dplyr)
 library(tidyr)
 

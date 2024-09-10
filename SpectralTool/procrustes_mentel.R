@@ -1,12 +1,14 @@
 # set work directory
-setwd("C:/Users/Lenovo/Documents/Programiranje/PhD/SpectralTool/datasets/procrustes")
+setwd("C:/Users/Lenovo/Documents/Programiranje/PhD/SpectralTool/datasets/preprocessed spectra")
 
 # read and inspect dataframe
-df_1 = read.csv('master_omnic.csv')
+df_1 = read.csv('DPP1_all.csv')
 View(df_1)
 
-df_2 = read.csv('master_openspecy.csv')
+df_2 = read.csv('DPP2_all.csv')
 View(df_2)
+
+df_3 = read.csv("DPP3_all.csv")
 
 #load libraries
 library(ggplot2)
@@ -58,14 +60,17 @@ grid.arrange(plot_1, plot_2, ncol = 2)
 # remove rows with 0, else scaling wont work
 df_1 = df_1[apply(df_1!=0, 1, all),]
 df_2 = df_2[apply(df_2!=0, 1, all),]
+df_3 = df_3[apply(df_3!=0, 1, all),]
 
 # tranpose
 df1_pca = t(df_1)
 df2_pca = t(df_2)
+df3_pca = t(df_3)
 
 # make first row column names
 colnames(df1_pca) = as.character(unlist(df1_pca[1, ]))
 colnames(df2_pca) = as.character(unlist(df2_pca[1, ]))
+colnames(df3_pca) = as.character(unlist(df3_pca[1, ]))
 
 # replace previous column names and reset
 df1_pca = df1_pca[-1, ]
@@ -74,10 +79,13 @@ rownames(df1_pca) = NULL
 df2_pca = df2_pca[-1, ]
 rownames(df2_pca) = NULL
 
+df3_pca = df3_pca[-1, ]
+rownames(df3_pca) = NULL
+
 # inspect the results
 View(df1_pca)
 View(df2_pca)
-
+View(df3_pca)
 
 ###################
 # PERFORM THE PCA #
@@ -86,28 +94,37 @@ View(df2_pca)
 # calculate PCs
 results_1 = prcomp(df1_pca, scale=TRUE)
 results_2 = prcomp(df2_pca, scale = TRUE)
+results_3 = prcomp(df3_pca, scale = TRUE)
 
 # reverse eigenvectors
 results_1$rotation = -1*results_1$rotation
 results_2$rotation = -1*results_2$rotation
+results_3$rotation = -1*results_3$rotation
 
 # dispay PCs
 results_1$rotation
 results_2$rotation
+results_3$rotation
 
 # automatic biplot
-par(mfrow = c(1, 2))
-biplot(results_1, scale = 0)
-biplot(results_2, scale = 0)
+par(mfrow = c(1, 3))
 
+biplot(results_1, scale = 0)
+title(main = "DPP1", line = 2.5)  # Adjust the value of 'line' to move the title
+
+biplot(results_2, scale = 0)
+title(main = "DPP2", line = 2.5)
+
+biplot(results_3, scale = 0)
+title(main = "DPP3", line = 2.5)
 
 ###############################
 # PERFORM PROCRUSTES ANALYSIS #
 ###############################
 
 # perform procrustes
-pro = procrustes(X = results_1, 
-                 Y = results_4, 
+pro = procrustes(X = results_2, 
+                 Y = results_3, 
                  symmetric = TRUE, 
                  scale = TRUE) 
 # print the results
@@ -140,18 +157,21 @@ text(pro$X,
 # take out the scores from first two principal components
 scores_1 = results_1$x[, 1:2]
 scores_2 = results_2$x[, 1:2]
+scores_3 = results_3$x[, 1:2]
 
 # check the dimensions - matrices must be the same dimensions
 dim(scores_1)
 dim(scores_2)
+dim(scores_3)
 
 # make distance matrix from derived scores
 dist_1 = dist(scores_1)
 dist_2 = dist(scores_2)
+dist_3 = dist(scores_3)
 
 # perform the Mantel test
-mantel_result = mantel(dist_1, 
-                       dist_2, 
+mantel_result = mantel(dist_2, 
+                       dist_3, 
                        method = "pearson",
                        permutations = 9999)
 print(mantel_result)
