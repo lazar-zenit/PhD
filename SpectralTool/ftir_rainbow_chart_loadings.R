@@ -10,7 +10,6 @@ library(patchwork)
 df = read.csv("loadings_for_rainbow.csv")
 View(df)
 
-
 #sort
 df <- df %>% arrange(wavenumber)
 
