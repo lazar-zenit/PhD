@@ -9,6 +9,7 @@ from tkinter import filedialog
 import os
 import time
 import re
+from pyteomics import mgf, mzxml
 
 # file_choose() function
 def choose_file():
@@ -34,9 +35,9 @@ else:
     print("No file selected")
     
 #%%
-##############################
-# OPEN MGF FILE AS TEST FILE #
-##############################
+#################
+# OPEN MGF FILE #
+#################
 
 try:
     with open(file_path, 'r') as file:
@@ -63,6 +64,9 @@ original_file_name = os.path.basename(file_path)
 new_file_name = f"Modified_{original_file_name}"    
 output_file = os.path.join(output_folder, new_file_name)
 
+new_new_file_name = new_file_name = f"Pyteomics_mod_{original_file_name}"
+new_output_file = os.path.join(output_folder, new_new_file_name)
+
 #%%
 #######################
 # MODIFY THE CONTENTS #
@@ -71,6 +75,9 @@ start=time.time()
 
 # replace tabs with spaces
 modified_content = content.replace('\t', ' ')
+
+# remove Num peaks - most important
+modified_content = re.sub(r"Num Peaks:[^\n]*\n", "", modified_content)
 
 # tweak the TITLE line
 modified_content = re.sub(r"TITLE=[^|]*\|ID=(\d+).*", 
@@ -86,19 +93,30 @@ def convert_rtinminutes_to_seconds(match):
 modified_content = re.sub(r"RTINMINUTES=([\d.]+)", convert_rtinminutes_to_seconds, modified_content)
 
 # remove ION=
-modified_content = re.sub(r"ION=[^\n]*\n", "", modified_content)
+#modified_content = re.sub(r"ION=[^\n]*\n", "", modified_content)
+    
+    
+# cleaning of empty spectra can be achieved using pyteomics    
+with mgf.read(output_file) as reader:
+    filtered_spectra = [
+        spectrum for spectrum in reader
+            if 'm/z array' in spectrum and spectrum['m/z array'].size > 0
+            ]
 
-# remove Num peaks:
-modified_content = re.sub(r"Num Peaks:[^\n]*\n", "", modified_content)
+# save .mgf file    
+mgf.write(filtered_spectra, new_output_file)
 
+# stop the timer
+end = time.time()
 
-with open(output_file, 'w') as file:
-    file.write(modified_content)
+# print save file location
+print(f"File processed and saved as \n{new_output_file}.\n")
 
-end=time.time()
+# print total number of spectra
+print(print(f"Total number of filtered spectra: {len(filtered_spectra)}\n"))
 
-print(f"File processed and saved as \n{output_file}.\n")
 print('Time elapsed (minutes):'
 	  , round((end-start)/60, 2), 
 	  '\nTime elapsed (seconds):', 
 	  round(end-start, 2))
+
