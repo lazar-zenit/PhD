@@ -1,6 +1,6 @@
 # What is SpectralTool
 SpectralTool is collection of tools for dealing with spectral data. This covers scripts for filtering and trimming datasets, preprocessing, multivariate analysis and visual representations.
-
+Spectra in question, can be anything from UV/VIS, FTIR or chromatography data.
 # What models are currently being worked on?
 For now there are scripts for:
 - Principal Component Analysis (PCA) - both in base R and FactoMineR package
