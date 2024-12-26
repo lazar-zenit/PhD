@@ -1,16 +1,9 @@
-# install libraries
-if (!require("BiocManager", quietly = TRUE))
-  install.packages("BiocManager")
-
-BiocManager::install("ropls")
-
 # load libraries
 library(ggplot2)
 library(ropls)
 library(prospectr)
+library(gridExtra)
 
-# select work directory
-setwd(choose.dir())
 
 # load dataset
 oplsda.df <- read.csv(file.choose())
@@ -18,12 +11,13 @@ oplsda.df <- read.csv(file.choose())
 
 # make numeric dataset for Kennard-Stone
 # subset the dataframe
-df.numeric <- oplsda.df[, 2:ncol(oplsda.df)]
+cat(paste(seq_along(colnames(oplsda.df)[1:25]), colnames(oplsda.df)[1:25], sep = ". "), sep = "\n")
+df.numeric <- oplsda.df[, 8:ncol(oplsda.df)]
 #View(df.numeric)
 
 # declare class and names
-class <- oplsda.df[, 1]
-dataMatrix <- oplsda.df[, 2:dim(oplsda.df)[2]]
+class <- oplsda.df[, 7]
+dataMatrix <- oplsda.df[, 8:dim(oplsda.df)[2]]
 
 #check class and data matrix
 #View(class)
@@ -77,30 +71,15 @@ elapsed_time
 # Plot the results #
 ####################
 
+par(mfrow = c(1, 2))
 #plot of x-score
 plot(data.oplsda,
-     typeVc = "x-score"
-)
+     typeVc = "x-score")
 
-#plot of x-score
+
+# plot of x-score
 plot(data.oplsda,
-     typeVc = "correlation"
-)
+     typeVc = "permutation")
 
-#plot of x-score
-plot(data.oplsda,
-     typeVc = "permutation"
-)
-
-  #plot of predict vs. actual
-plot(data.oplsda,
-     typeVc = "predict-train"
-)
-
-
-#plot of outliers
-plot(data.oplsda,
-     typeVc = "outlier"
-     )
 
 
