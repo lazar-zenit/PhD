@@ -22,7 +22,7 @@ df <- read.csv(file.choose(), check.names = FALSE)                              
 View(df)
 
 # subset the dataframe
-df.active <- df[, 13:ncol(df)]                                                  # in this example we need column 1 
+df.active <- df[, 3:ncol(df)]                                                  # in this example we need column 1 
                                                                                 # and column 13 to the end
 # inspect active dataframe
 View(df.active)
@@ -48,6 +48,8 @@ pca.results$eig
 
 # get the eigenvalues from pca.results object
 eig.vals <- get_eigenvalue(pca.results)
+
+get_eigenvalue(pca.results)
 
 # prepare eigenvlues so they can be used in ggplot2
 eig.val.scree <- eig.vals                                                       # make new variable for our plot
@@ -132,7 +134,7 @@ ggsave("scree_plot.svg", plot = scree_plot, width = 25, height = 20, units = "cm
 orig_var_percent <- pca.results$eig[, 2]                                        # extract percentage of variance
 
 # number of permutations and number of components to be calculated
-n_permutations <- 1000                                               
+n_permutations <- 500                                               
 n_components <- nrow(pca.results$eig)                                           # number of components is equal to
                                                                                 # number of eigenvalues
 
@@ -240,10 +242,11 @@ fviz_pca_var(pca.results,
 
 fviz_pca_ind(pca.results,                                                       # our PCA object
              geom.ind = "point",
-             col.ind = df$`Run order`,                                          # category pulled from original dataframe,
-             pallete = c("#00AFBB", "#E7B800", "#FC4E07"),   
+             col.ind = df$`Label`,                                          # category pulled from original dataframe,
+             pallete = c("#00AFBB", "#E7B800"),   
              addEllipses = TRUE,                                                # add elipses
-             legend.title = "Groups") +                                         # title of legend
+             legend.title = "Groups") +  
+  labs(title = "PCA") +
   theme(plot.title = element_text(hjust = 0.5))                                 # center the title
 
 ###################################
@@ -305,13 +308,23 @@ mean_spectra$Wavenumber <- as.numeric(mean_spectra$Wavenumber)
 
 # peak picking
 mean_spectra_fp <- findpeaks(mean_spectra$Intensity,
-                                minpeakheight = 0.01)
+                                minpeakheight = -1,
+                             minpeakdistance = 30,)
 mean_spectra_fp
 
 mean_spectra_pi <- mean_spectra_fp[, 2]
 mean_spectra_peaks <- data.frame(
   Wavenumber = mean_spectra$Wavenumber[mean_spectra_pi],
   Intensity = mean_spectra_fp[, 1])
+
+ylim_min <- -1.3
+ylim_max <- 4
+intensity_offset <- 0.3
+
+pc1.var.per <- round(eig.val.scree$variance.percent[1], 1)
+pc2.var.per <- round(eig.val.scree$variance.percent[2], 1)
+pc3.var.per <- round(eig.val.scree$variance.percent[3], 1)
+pc4.var.per <- round(eig.val.scree$variance.percent[4], 1)
 
 # plot the RainbowSpectrum 
 pc1.rainbow.plot <- ggplot(mean_spectra, aes(x = Wavenumber, y = Intensity, group = 1)) +
@@ -321,19 +334,19 @@ pc1.rainbow.plot <- ggplot(mean_spectra, aes(x = Wavenumber, y = Intensity, grou
                        low="green",
                        high="red") +
   geom_segment(data = mean_spectra_peaks, aes(x = Wavenumber, xend = Wavenumber, 
-                                y = Intensity + 0.02, yend = Intensity),  # Small vertical lines
+                                y = Intensity + intensity_offset, yend = Intensity),  # Small vertical lines
                color = "red", size = 1) +  # Adjust size for thickness of notches
   
   # Add vertical text labels for the peaks directly on top of the notches
-  geom_text(data = mean_spectra_peaks, aes(x = Wavenumber, y = Intensity + 0.02,  # Adjust position above the notch
+  geom_text(data = mean_spectra_peaks, aes(x = Wavenumber, y = Intensity + intensity_offset,  # Adjust position above the notch
                              label = round(Wavenumber, 0)), 
             angle = 90, vjust = 0, hjust = 0, color = "black") +
-  labs(title = "Variable contribution to the PC1",
+  labs(title = paste("Variable contribution to the PC1 ", "(", pc1.var.per, "% of total variance )"),
        x = "Wavenumber",
        y = "Intensity",
        color = "Contribution to \n the PC1 (%)") +
   scale_x_reverse() +
-  ylim(0, 1.15) +
+  ylim(ylim_min, ylim_max) +
   theme_minimal() +
   theme(plot.title = element_text(hjust = 0.5),
         legend.title = element_text(hjust = 0.5)) 
@@ -347,19 +360,19 @@ pc2.rainbow.plot <- ggplot(mean_spectra, aes(x = Wavenumber, y = Intensity, grou
                        low="green",
                        high="red") +
   geom_segment(data = mean_spectra_peaks, aes(x = Wavenumber, xend = Wavenumber, 
-                                              y = Intensity + 0.02, yend = Intensity),  # Small vertical lines
+                                              y = Intensity + intensity_offset, yend = Intensity),  # Small vertical lines
                color = "red", size = 1) +  # Adjust size for thickness of notches
   
   # Add vertical text labels for the peaks directly on top of the notches
-  geom_text(data = mean_spectra_peaks, aes(x = Wavenumber, y = Intensity + 0.02,  # Adjust position above the notch
+  geom_text(data = mean_spectra_peaks, aes(x = Wavenumber, y = Intensity + intensity_offset,  # Adjust position above the notch
                                            label = round(Wavenumber, 0)), 
             angle = 90, vjust = 0, hjust = 0, color = "black") +
-  labs(title = "Variable contribution to the PC2",
+  labs(title = paste("Variable contribution to the PC2 ", "(", pc2.var.per, "% of total variance )"),
        x = "Wavenumber",
        y = "Intensity",
        color = "Contribution to \n the PC2 (%)") +
   scale_x_reverse() +
-  ylim(0, 1.15) +
+  ylim(ylim_min, ylim_max) +
   theme_minimal() +
   theme(plot.title = element_text(hjust = 0.5),
         legend.title = element_text(hjust = 0.5)) 
@@ -371,19 +384,19 @@ pc3.rainbow.plot <- ggplot(mean_spectra, aes(x = Wavenumber, y = Intensity, grou
                        low="green",
                        high="red") +
   geom_segment(data = mean_spectra_peaks, aes(x = Wavenumber, xend = Wavenumber, 
-                                              y = Intensity + 0.02, yend = Intensity),  # Small vertical lines
+                                              y = Intensity + intensity_offset, yend = Intensity),  # Small vertical lines
                color = "red", size = 1) +  # Adjust size for thickness of notches
   
   # Add vertical text labels for the peaks directly on top of the notches
-  geom_text(data = mean_spectra_peaks, aes(x = Wavenumber, y = Intensity + 0.02,  # Adjust position above the notch
+  geom_text(data = mean_spectra_peaks, aes(x = Wavenumber, y = Intensity + intensity_offset,  # Adjust position above the notch
                                            label = round(Wavenumber, 0)), 
             angle = 90, vjust = 0, hjust = 0, color = "black") +
-  labs(title = "Variable contribution to the PC3",
+  labs(title = paste("Variable contribution to the PC3 ", "(", pc3.var.per, "% of total variance )"),
        x = "Wavenumber",
        y = "Intensity",
        color = "Contribution to \n the PC3 (%)") +
   scale_x_reverse() +
-  ylim(0, 1.15) +
+  ylim(ylim_min, ylim_max) +
   theme_minimal() +
   theme(plot.title = element_text(hjust = 0.5),
         legend.title = element_text(hjust = 0.5)) 
@@ -395,19 +408,19 @@ pc4.rainbow.plot <- ggplot(mean_spectra, aes(x = Wavenumber, y = Intensity, grou
                        low="green",
                        high="red") +
   geom_segment(data = mean_spectra_peaks, aes(x = Wavenumber, xend = Wavenumber, 
-                                              y = Intensity + 0.02, yend = Intensity),  # Small vertical lines
+                                              y = Intensity + intensity_offset, yend = Intensity),  # Small vertical lines
                color = "red", size = 1) +  # Adjust size for thickness of notches
   
   # Add vertical text labels for the peaks directly on top of the notches
-  geom_text(data = mean_spectra_peaks, aes(x = Wavenumber, y = Intensity + 0.02,  # Adjust position above the notch
+  geom_text(data = mean_spectra_peaks, aes(x = Wavenumber, y = Intensity + intensity_offset,  # Adjust position above the notch
                                            label = round(Wavenumber, 0)), 
             angle = 90, vjust = 0, hjust = 0, color = "black") +
-  labs(title = "Variable contribution to the PC4",
+  labs(title = paste("Variable contribution to the PC4 ", "(", pc4.var.per, "% of total variance )"),
        x = "Wavenumber",
        y = "Intensity",
        color = "Contribution to \n the PC4 (%)") +
   scale_x_reverse() +
-  ylim(0, 1.15) +
+  ylim(ylim_min, ylim_max) +
   theme_minimal() +
   theme(plot.title = element_text(hjust = 0.5),
         legend.title = element_text(hjust = 0.5)) 
