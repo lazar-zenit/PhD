@@ -1,4 +1,4 @@
-# load libraries
+# Load libraries
 library(ggplot2)
 library(ropls)
 library(prospectr)
@@ -78,6 +78,9 @@ data.oplsda.subset <- opls(
 # Model summaries
 data.oplsda@summaryDF
 data.oplsda.subset@summaryDF
+data.oplsda@
+aov(data.oplsda)
+data.oplsda@scoreMN
 
 # Stop the timer and display time elapsed
 end_time <- Sys.time()

@@ -1,154 +1,163 @@
-################################################################################
-#                                Libraries                                     #
-################################################################################
-
+#  Load libraries -------------------------------------------------------------
 library(ggplot2)
 library(FactoMineR)
 library(factoextra)
 library(tidyr)
 library(gridExtra)
 library(pracma)
+library(svglite) # if you wish to save images automaticaly
 
-# other dependencies include: svglite (for saving images)
 
-################################################################################
-#                          Prepare the dataset                                 #
-################################################################################
+# User input ------------------------------------------------------------------
 
-# load prepared dataset in .csv format
-df <- read.csv(file.choose(), check.names = FALSE)                              # omnic_processed_all_pretty_MV_table.csv for test
+# Load prepared dataset in .csv format
+df <- read.csv(file.choose(), check.names = FALSE)
 
-# inspect dataframe and decide which columns go into PCA
+# Inspect dataframe and decide which columns go into PCA
 View(df)
 
+# Specify first column of numerical data
+first.data.col <- 3
+
 # subset the dataframe
-df.active <- df[, 3:ncol(df)]                                                  # in this example we need column 1 
-                                                                                # and column 13 to the end
+df.active <- df[, first.data.col:ncol(df)]
+
 # inspect active dataframe
 View(df.active)
 
+# Number of permutations for PCA permutation test
+n_permutations <- 500 
 
-################################################################################
-#                          perform PCA (FactoMineR)                           #
-################################################################################
+# Y-axis limits on Rainbow Spectrum and offset of wavenumber markers
+ylim_min <- -1.3
+ylim_max <- 4
+intensity_offset <- 0.3
 
-pca.results <- PCA(df.active, graph = TRUE)                                     # graph = TRUE is just for check, it is useless with
-                                                                                # this much data
-# print the results of PCA
-print(pca.results)                                                              # results contain eigenvalues,  
-                                                                                # coordinates, correlations, weights and much more
-pca.results$eig
-################################################################################
-#                              PCA results                                     #
-################################################################################
+# PCA (FactoMineR) ------------------------------------------------------------
 
-##############
-# Scree plot #
-##############
+# Perform PCA
+pca.results <- PCA(df.active, graph = TRUE)
 
-# get the eigenvalues from pca.results object
+# Print the results of PCA
+print(pca.results)                                                            
+                                                                              
+
+# Scree plot ------------------------------------------------------------------
+
+# Get the eigenvalues from pca.results object
 eig.vals <- get_eigenvalue(pca.results)
 
-get_eigenvalue(pca.results)
+# Prepare eigenvlues so they can be used in ggplot2
+eig.val.scree <- eig.vals
+eig.val.scree <- as.data.frame(eig.val.scree)
+eig.val.scree$dimensions <- 1:nrow(eig.val.scree)                             
 
-# prepare eigenvlues so they can be used in ggplot2
-eig.val.scree <- eig.vals                                                       # make new variable for our plot
-eig.val.scree <- as.data.frame(eig.val.scree)                                   # convert it to dataframe
-eig.val.scree$dimensions <- 1:nrow(eig.val.scree)                               # add new column for dimensions
-
-# inspecr eigenvalues
+# Inspect eigenvalues
 eig.val.scree
 
-# make Scree plot (manualy making it looks best)
+# Make Scree plot (manually looks best)
 scree_plot = ggplot(eig.val.scree, aes(x = dimensions)) +
   
-  # bars for varieance explained
-  geom_col(aes(y = variance.percent, 
-               fill = "Variance (%)"), 
-           alpha = 0.4) +
+  # Bars for variance explained
+  geom_col(aes(y = variance.percent, fill = "Variance (%)"), alpha = 0.4) +
   
-  # points for variance explained
-  geom_point(aes(y = variance.percent,                                          
-                 color = "Variance (%)")) +
+  # Points for variance explained
+  geom_point(aes(y = variance.percent, color = "Variance (%)")) +
   
-  # line for variance explained
-  geom_line(aes(y = variance.percent,                                          
-                color = "Variance explained (%)", group = 1)) +
+  # Line for variance explained
+  geom_line(aes(y = variance.percent, color = "Variance explained (%)", group = 1)) +
   
-  # points for cumulative variance
-  geom_point(aes(y = cumulative.variance.percent,          
-                 color = "Cumulative Variance (%)")) +
+  # Points for cumulative variance
+  geom_point(aes(y = cumulative.variance.percent, color = "Cumulative Variance (%)")) +
   
-  # line for cumulative variance
-  geom_line(aes(y = cumulative.variance.percent,           
-                color = "Cumulative Variance (%)", 
-                group = 2)) +
+  # Line for cumulative variance
+  geom_line(aes(y = cumulative.variance.percent, color = "Cumulative Variance (%)", group = 2)) +
   
-  # text for variance explained
-  geom_text(aes(y = variance.percent,                      
-                label = round(variance.percent, 1)), 
-            hjust = -0.5,
-            angle = 90,
-            size = 3,
-            color = "blue") +
+  # Text for variance explained
+  geom_text(
+    aes(y = variance.percent, label = round(variance.percent, 1)),
+    hjust = -0.5,
+    angle = 90,
+    size = 3,
+    color = "blue"
+  ) +
   
-  # text for cumulative variance
-  geom_text(aes(y = cumulative.variance.percent,           
-                label = round(cumulative.variance.percent, 1)), 
-            hjust = 1.5,
-            angle = 90,
-            size = 3,
-            color = "red") +
+  # Text for cumulative variance
+  geom_text(
+    aes(
+      y = cumulative.variance.percent,
+      label = round(cumulative.variance.percent, 1)
+    ),
+    hjust = 1.5,
+    angle = 90,
+    size = 3,
+    color = "red"
+  ) +
   
-  # labels
-  labs(title = "Scree Plot",                               
-       x = "Principal Components", 
-       y = "Percentage (%)",
-       color = "Colour",
-       fill = "Fill") +
-  scale_color_manual(values = c("Variance explained (%)" = "blue",  
-                                "Cumulative Variance (%)" = "red")) +
-  scale_x_continuous(breaks = seq(1, max(eig.val.scree$dimensions), by = 1)) + 
-  ylim(0, 105) +                                          
+  # Labels
+  labs(
+    title = "Scree Plot",
+    x = "Principal Components",
+    y = "Percentage (%)",
+    color = "Colour",
+    fill = "Fill"
+  ) +
+  
+  # Color scale
+  scale_color_manual(values = c(
+    "Variance explained (%)" = "blue",
+    "Cumulative Variance (%)" = "red"
+  )) +
+  
+  # X-axis is continous not factors
+  scale_x_continuous(breaks = seq(1, max(eig.val.scree$dimensions), by = 1)) +
+  
+  # Y-axis limits
+  ylim(0, 105) +
   theme_minimal() +
-  theme(axis.text.x = element_text(angle = 0,            
-                                   vjust = 0.5, 
-                                   hjust = 1),
-        plot.title = element_text(hjust = 0.5,
-                                  vjust = 1.5)
-        )
+  theme(
+    # Ajdust orientation of text
+    axis.text.x = element_text(
+      angle = 0,
+      vjust = 0.5,
+      hjust = 1
+    ),
+    plot.title = element_text(hjust = 0.5, vjust = 1.5)
+  )
 
                                   
-# display the plot                                  
+# Display the plot                                  
 scree_plot
 
-# save the plot as .svg
-ggsave("scree_plot.svg", plot = scree_plot, width = 25, height = 20, units = "cm")
+# Save the plot as .svg
+#ggsave("scree_plot.svg", plot = scree_plot, width = 25, height = 20, units = "cm")
 
 
-####################
-# Permutation test #
-####################
+# Permutation test ------------------------------------------------------------
 
-# percent variance explaned in original data
-orig_var_percent <- pca.results$eig[, 2]                                        # extract percentage of variance
+# Percent variance explaned in original data
+orig_var_percent <- pca.results$eig[, 2]                                       
 
-# number of permutations and number of components to be calculated
-n_permutations <- 500                                               
-n_components <- nrow(pca.results$eig)                                           # number of components is equal to
-                                                                                # number of eigenvalues
+# Number of permutations and number of components to be calculated
+n_components <- nrow(pca.results$eig)                                           
+                                                                              
 
-# matrix to store permuted percetages of variance
+# Matrix to store permuted percentages of variance
 perm_var_percent <- matrix(0, nrow = n_permutations, ncol = n_components)
 
-# radnom seed - can be uncommented for reproducibility
+# Random seed - can be un-commented for reproducibility
 #set.seed(123)
 
-# do pca n-permutation number of times
+# Do PCA n-permutation number of times
 for (i in 1:n_permutations) {
-  permuted_data <- apply(df.active, 2, sample)                                  # permute each column
-  perm_pca <- PCA(permuted_data, scale.unit = TRUE, graph = FALSE)              # perform PCA
-  perm_var_percent[i, ] <- perm_pca$eig[, 2]                                    # extract % variance explained
+  # Permute each column
+  permuted_data <- apply(df.active, 2, sample)
+  
+  # Perform PCA
+  perm_pca <- PCA(permuted_data, scale.unit = TRUE, graph = FALSE)
+  
+  # Extract % variance explained
+  perm_var_percent[i, ] <- perm_pca$eig[, 2]
 }
 
 # Prepare data for ggplot
@@ -217,23 +226,24 @@ fviz_pca_var(pca.results)
 # loadings and scores
 fviz_pca_biplot(pca.results)
 
-############
-# Clusters #
-############
 
-# ths is done through K-means clustering
-set.seed(123)                                   # set seed for reproducibility
+# k-means clustering ---------------------------------------------------------
+
+# set seed for reproducibility
+set.seed(123)                                  
 
 
-km.results <- kmeans(var$coord,                 # we use coordinates
-                     centers = 3,               # for k-means we need number of centers
-                     nstart = 25)               # number of random sets to begin with              
+km.results <- kmeans(var$coord, # Number of centers (clusters)
+                     centers = 3, # Number of random sets to begin with
+                     nstart = 25)  
 
+# Print results
 km.results
 
-grp <- as.factor(km.results$cluster)            # cluster must be as factors for vizualization
+# Cluster must be as factors for vizualization
+grp <- as.factor(km.results$cluster)            
 
-# vizualize
+# Vizualize
 fviz_pca_var(pca.results, 
              col.var = grp,
              pallete = c("#0073C2FF", "#EFC000FF", "#868686FF"),
@@ -249,10 +259,9 @@ fviz_pca_ind(pca.results,                                                       
   labs(title = "PCA") +
   theme(plot.title = element_text(hjust = 0.5))                                 # center the title
 
-###################################
-# Score plots colored by category #
-###################################
-temperature_score <- fviz_pca_ind(pca.results,
+
+# Score plots colored by category (FActoMineR) --------------------------------
+colour.score.plot <- fviz_pca_ind(pca.results,
              addEllipses=TRUE,                                                  # these elipses are for categories
              ellipse.level=0.95,
              col.ind = as.factor(df$`Temperature (actual)`),                    # it is very important to do as. factor
@@ -261,72 +270,60 @@ temperature_score <- fviz_pca_ind(pca.results,
   labs(title = "Score plot colored by temperature") +
   theme(plot.title = element_text(hjust = 0.5)) 
 
-temperature_score
-
-ethanol_score <- fviz_pca_ind(pca.results,
-                              addEllipses=TRUE, 
-                              ellipse.level=0.95,
-                              col.ind = as.factor(df$`Percent ethanol (actual)`),
-                              palette = c("#00AFBB", "#E7B800", "#FC4E07") ) +
-  labs(title = "Score plot colored by percentage of ethanol") +
-  theme(plot.title = element_text(hjust = 0.5)) 
-
-ethanol_score
+colour.score.plot
 
 
-################################################################################
-#                             RainbowSpectrum                                  #
-################################################################################
-# extract variable contribution to the total variance of component (in %)
+# RainbowSpectrum --------------------------------------------------------------
+
+# Extract variable contribution to the total variance of component (in %)
 contrib <- pca.results$var$contrib
 
-# convert it to dataframe
+# Convert it to dataframe
 contrib_df <- as.data.frame(contrib)
 
-# add column with rown names (not in column by default)
+# Add column with row names (not in column by default)
 contrib_df$Variable <- rownames(contrib)
 
-# our active column is transposed for multivariate applications. we need to change it back
+# Our active column is transposed for multivariate applications. we need to change it back
 df.transposed <- as.data.frame(t(df.active))
 
-# add Wavenumber column
+# Add Wavenumber column
 df.transposed$Wavenumber <- rownames(df.transposed)
 
-# put Wavenumber in first place
+# Put Wavenumber in first place
 df.transposed <- df.transposed[c("Wavenumber", setdiff(names(df.transposed), "Wavenumber"))]
 
-# extract wavenumbers and calculate means of all the other columns
+# Extract wavenumbers and calculate means of all the other columns
 wavenumber <- df.transposed$Wavenumber
 
+# Transpose table as numeric
 df.transposed[, -1] <- lapply(df.transposed[, -1], as.numeric)
+
+# Calulate mean intensities
 mean_intensities <- rowMeans(df.transposed[, -1])
 
+# Convert it to dataframe
 mean_spectra <- data.frame(Wavenumber = wavenumber, Intensity = mean_intensities)
-View(mean_spectra)
-
 mean_spectra$Wavenumber <- as.numeric(mean_spectra$Wavenumber)
 
-# peak picking
+# Peak picking
 mean_spectra_fp <- findpeaks(mean_spectra$Intensity,
                                 minpeakheight = -1,
                              minpeakdistance = 30,)
-mean_spectra_fp
 
 mean_spectra_pi <- mean_spectra_fp[, 2]
 mean_spectra_peaks <- data.frame(
   Wavenumber = mean_spectra$Wavenumber[mean_spectra_pi],
   Intensity = mean_spectra_fp[, 1])
 
-ylim_min <- -1.3
-ylim_max <- 4
-intensity_offset <- 0.3
 
+# Get the percentage of variance explained by each component
 pc1.var.per <- round(eig.val.scree$variance.percent[1], 1)
 pc2.var.per <- round(eig.val.scree$variance.percent[2], 1)
 pc3.var.per <- round(eig.val.scree$variance.percent[3], 1)
 pc4.var.per <- round(eig.val.scree$variance.percent[4], 1)
 
-# plot the RainbowSpectrum 
+# Plot the RainbowSpectrum 
 pc1.rainbow.plot <- ggplot(mean_spectra, aes(x = Wavenumber, y = Intensity, group = 1)) +
   geom_line(size = 1, aes(color = abs(contrib_df$Dim.1))) +
   scale_color_gradient(limits = c(min(contrib_df$Dim.1),
@@ -426,13 +423,14 @@ pc4.rainbow.plot <- ggplot(mean_spectra, aes(x = Wavenumber, y = Intensity, grou
         legend.title = element_text(hjust = 0.5)) 
 
 
+# Combine all 4 plots
 combine.rainbow <- grid.arrange(pc1.rainbow.plot, 
                                 pc2.rainbow.plot, 
                                 pc3.rainbow.plot, 
                                 pc4.rainbow.plot,
                                 ncol = 1)
 
-ggsave("rainbow_plot.svg", plot = combine.rainbow, width = 21, height = 29.7, units = "cm")
+# Save the plot
+#ggsave("rainbow_plot.svg", plot = combine.rainbow, width = 21, height = 29.7, units = "cm")
 
-pca.results
 
