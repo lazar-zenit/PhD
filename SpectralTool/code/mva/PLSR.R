@@ -2,125 +2,184 @@
 library(ggplot2)
 library(prospectr)
 library(pls)
+library(factoextra)
+library(FactoMineR)
+library(parallel)
 
+# User input -------------------------------------------------------------------
 
-# import data
-plsr.df <- read.csv(file.choose())
+# Import data
+df <- read.csv(file.choose(), check.names = FALSE)
 
-################################################################################
-#                         Dataset division                                     #
-################################################################################
+# Inspect dataframe
+View(df)
 
-                          ###################
-                          # Random division #
-                          ###################
+# Drop irelevant columns
+plsr.df <- df[, !names(df) %in% c("Type", "Leaf", "Plant", "Tag")]
 
-# enter sizes of train and test datasets
-percent.train <- 0.8
-percent.test <- 0.2
+# Inspect dataframe
+View(plsr.df)
 
-#----------------------------- run together -----------------------------------#
+# Enter ratio of train (calibration) individuals
+percent.train <- 0.75
 
-# make random list of rows
-random.rows <- as.list(sample(1:nrow(plsr.df)))
+#            You can run the following code together to the end                #  
 
-# determine sizes of train and test sets
+# Kennard-Stone (Euclidian) ----------------------------------------------------
+
+# Start timer
+start_time <- Sys.time()
+
+# Calculate number of train individuals
 train.size <- floor(percent.train * nrow(plsr.df))
-test.size <- nrow(plsr.df) - train.size
 
-# make a list of rows for each set
-train.list <- as.list(random.rows[1:train.size])
-test.list <- as.list(random.rows[(train.size + 1):nrow(plsr.df)])
+# Run Kennard-Stone function
+kennard.euclid <- kenStone(plsr.df, train.size, metric = 'euclid')
 
-# subset original dataframe to obtain train and test dataframes
-train.random <- plsr.df[unlist(train.list), ]  
-test.random <- plsr.df[unlist(test.list), ] 
-
-#------------------------------------------------------------------------------#
-
-                    ############################
-                    # Kennard-Stone (Euclidian)#
-                    ############################
-
-# enter number of train (calibration) individuals
-k <- 380
-
-#----------------------------- run together -----------------------------------#
-
-# run Kennard-Stone function
-kennard.euclid <- kenStone(plsr.df, k, metric = 'euclid')
-
-# subset original dataframe
+# Subset original dataframe
 train.kennard.euclid <- plsr.df[kennard.euclid$model, ]
 test.kennard.euclid <- plsr.df[kennard.euclid$test, ]
 
-#------------------------------------------------------------------------------#
+# Plot parameters 
+par(mfrow =c(2,3))
+par(mar = c(5, 5, 4, 2) + 0.1)
 
-                    #      WORK IN PROGRESS      #
-                    #      WORK IN PROGRESS      #
-                    #      WORK IN PROGRESS      #
-                    #      WORK IN PROGRESS      #
-                    #      WORK IN PROGRESS      #
+# Visual representation of subsetting ------------------------------------------
 
-                    ##############################
-                    # Kennard-Stone (Mahalanobis)#
-                    ##############################
+# Take only numerical values
+df.active <- plsr.df[, 2:ncol(plsr.df)] 
 
-# enter number of train (calibration) individuals
-k <- 380
+# Perform PCA
+pca.results <- PCA(df.active, graph = FALSE) 
 
-#----------------------------- run together -----------------------------------#
+# Assign colors to points in the model and test set
+model.indices <- kennard.euclid$model
+test.indices <- kennard.euclid$test
 
-# run Kennard-Stone function
-kennard.mahal <- kenStone(plsr.df, k, metric = 'mahal')
+# Assign red to points in the test set
+point_colors <- rep("red", nrow(pca.results$ind$coord))
 
-# subset original dataframe
-train.kennard.mahal <- plsr.df[kennard.mahal$model, ]
-test.kennard.mahal <- plsr.df[kennard.mahal$test, ]
+# Assign blue to points in the model set
+point_colors[model.indices] <- "blue"
 
-#------------------------------------------------------------------------------#
+# Plot
+plot(
+  pca.results$ind$coord[, 1],  # PC1
+  pca.results$ind$coord[, 2],  # PC2
+  pch = 19,                    # Filled circle points
+  col = point_colors,          # Assign colors
+  xlab = "PC1",
+  ylab = "PC2",
+  main = "Model vs. Test set"
+)
 
-################################################################################
-#                                PLSR                                          #
-################################################################################
+# Add legend for clarity
+legend(
+  "topright",
+  legend = c("Model Set", "Test Set"),
+  col = c("blue", "red"),
+  pch = 19
+)
 
-# run the model
-#------------------------- run together ---------------------------------------#
-start_time <- Sys.time()
 
-model <- plsr(Time ~., data = train.kennard.euclid, validation = 'CV')
+# PLSR -------------------------------------------------------------------------
+#
 
-end_time <- Sys.time()
-elapsed_time <- end_time - start_time
-print(elapsed_time)
-#------------------------------------------------------------------------------#
+# Run on x cores parallel
+num_cores <- 6
+cluster = makeCluster(num_cores, type = "PSOCK")
+pls.options(parallel = cluster) 
 
-summary(model)
+# Run the model
+model <- plsr(Time ~., data = train.kennard.euclid, validation = 'LOO')
 
-# validation and component number
-par(mfrow =c(1,3))
-validationplot(model)
-validationplot(model, val.type="MSEP")
-validationplot(model, val.type="R2")
+# Calculate optimal number of components
+num.comp <- selectNcomp(model, 
+                        method = c("randomization"), 
+                        nperm = 999, 
+                        alpha = 0.01, 
+                        ncomp = model$ncomp, 
+                        plot = TRUE,
+                        main = "RMSEP vs. number \n of components"
+                        )
 
-model.prediction <- predict(model, test.kennard.euclid, ncomp = 61)
+# Make model prediction with advised number of components
+model.prediction <- predict(model, test.kennard.euclid, ncomp = num.comp)
 
-# calculate root square error (fine tunung number of components)
-sqrt(mean((model.prediction - test.kennard.euclid$Time)^2))
-
-# make linear model of predicted vs. actual
+# Make linear model of predicted vs. actual
 prediction.lm = lm(model.prediction ~ test.kennard.euclid$Time)
-summary(prediction.lm)
+model_summary <- summary(prediction.lm)
 
-# plot pred vs actual
-par(mfrow =c(1,1))
+
+# Info about linear model
+intercept <- coef(model_summary)[1, 1]
+slope <- coef(model_summary)[2, 1]
+r_squared <- model_summary$r.squared
+p_value <- model_summary$coefficients[2, 4]
+residuals <- residuals(prediction.lm)
+mean_residual <- mean(residuals)
+min_residual <- min(residuals)
+max_residual <- max(residuals)
+sd_residual <- sd(residuals)
+median_residual <- median(residuals)
+
+# Create the text to add to the plot
+summary_text <- paste("Intercept:", round(intercept, 2),
+                      "\nSlope:", round(slope, 2),
+                      "\nR-squared:", round(r_squared, 2),
+                      "\nP-value:", format(p_value, scientific = TRUE),
+                      "\nMean Residual:", round(mean_residual, 2),
+                      "\nSD Residual:", round(sd_residual, 2),
+                      "\nMedian residual:", round(median_residual, 2), 
+                      "\nMax Residual:", round(max_residual, 2),
+                      "\nMin Residual:", round(min_residual, 2),
+                      "\nNumber of components:", num.comp)                     
+
+# Plot pred vs actual and add summary text
 plot(test.kennard.euclid$Time, model.prediction, 
      xlab = "Actual Values", 
      ylab = "Predicted Values", 
-     main = "Control (Euclid)",
+     main = "Predicted vs. Actual",
      xlim = c(0, 80),
      ylim = c(0, 80),
-     col = "black",
+     col = "steelblue",
      pch = 16) +
   abline(0, 1, col = "red") +  
   abline(prediction.lm, col = "blue")
+
+text(x = 0, y = 50,          
+       labels = summary_text,
+       pos = 4,
+       cex = 1,          
+       col = "black")
+
+# Plots of regression coefficients for first 9 components
+plot(model, 
+     plottype = "coef", 
+     ncomp=1:3, 
+     legendpos = "bottomleft"
+     )
+
+plot(model, 
+     plottype = "coef", 
+     ncomp=4:6, 
+     legendpos = "bottomleft"
+     )
+
+plot(model, 
+     plottype = "coef", 
+     ncomp=7:9, 
+     legendpos = "bottom"
+     )
+
+# Uncomment if you need .txt file with summary statistic
+#writeLines(summary_text, "output.txt")
+
+# Stop parallel cluster
+stopCluster(cluster)
+
+# Stop the timer and print time elasped
+end_time <- Sys.time()
+elapsed_time <- end_time - start_time
+print(elapsed_time)
+
