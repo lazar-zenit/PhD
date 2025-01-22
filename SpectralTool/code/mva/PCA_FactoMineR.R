@@ -5,6 +5,7 @@ library(factoextra)
 library(tidyr)
 library(gridExtra)
 library(pracma)
+library(dplyr)
 library(svglite) # if you wish to save images automaticaly
 
 
@@ -13,36 +14,58 @@ library(svglite) # if you wish to save images automaticaly
 # Load prepared dataset in .csv format
 df <- read.csv(file.choose(), check.names = FALSE)
 
+# Filter dataframe if you need
+#df <- df %>%
+  #filter(Type == "Treatment")
+
 # Inspect dataframe and decide which columns go into PCA
-View(df)
+#View(df)
 
 # Specify first column of numerical data
-first.data.col <- 3
+first.data.col <- 6
 
 # subset the dataframe
 df.active <- df[, first.data.col:ncol(df)]
 
 # inspect active dataframe
-View(df.active)
+#View(df.active)
+
+# Limit number of principal components to be displayed in scree plot
+scree.pc.lim <- 20
 
 # Number of permutations for PCA permutation test
 n_permutations <- 500 
 
 # Y-axis limits on Rainbow Spectrum and offset of wavenumber markers
-ylim_min <- -1.3
-ylim_max <- 4
+ylim_min <- -0.1
+ylim_max <- 2
 intensity_offset <- 0.3
+
 
 # PCA (FactoMineR) ------------------------------------------------------------
 
 # Perform PCA
-pca.results <- PCA(df.active, graph = TRUE)
+pca.results <- PCA(df.active, graph = FALSE)
 
 # Print the results of PCA
 print(pca.results)                                                            
                                                                               
 
-# Scree plot ------------------------------------------------------------------
+# Score plots colored by category (FActoMineR) --------------------------------
+colour.score.plot <- fviz_pca_ind(pca.results,
+                                  addEllipses=TRUE,                                                  # these elipses are for categories
+                                  ellipse.level=0.95,
+                                  col.ind = as.factor(df$Type),                    # it is very important to do as. factor
+                                  palette = c("#2C3E50", "#E74C3C")                       # if it were continous variabes no as.factor needed
+) +                 
+  labs(title = "Score plot at 70 h") +
+  theme(plot.title = element_text(hjust = 0.5),
+        legend.position = "bottom") 
+
+colour.score.plot
+
+
+  # Scree plot ------------------------------------------------------------------
 
 # Get the eigenvalues from pca.results object
 eig.vals <- get_eigenvalue(pca.results)
@@ -114,6 +137,7 @@ scree_plot = ggplot(eig.val.scree, aes(x = dimensions)) +
   
   # Y-axis limits
   ylim(0, 105) +
+  xlim(1, scree.pc.lim) +
   theme_minimal() +
   theme(
     # Ajdust orientation of text
@@ -171,6 +195,12 @@ orig_var_df <- data.frame(
   Variance = orig_var_percent
 )
 
+# Filter the dataframe to limit continous x-axis
+orig_var_df <- orig_var_df %>%
+  filter(Component >= 1 & Component <= scree.pc.lim)
+
+# Convert user input to strings to limit discrete x-axis
+x_discrete <- as.character(seq(1, scree.pc.lim))
 
 # Plotting                                  
 permutation_test_plot = ggplot() +
@@ -207,12 +237,13 @@ permutation_test_plot = ggplot() +
         legend.title = element_blank()
   ) +
   scale_fill_manual(values = c("Permuted Data" = "lightblue")) +
-  scale_color_manual(values = c("Original Data" = "red")) 
+  scale_color_manual(values = c("Original Data" = "red")) +
+  scale_x_discrete(limits = c(x_discrete))
 
 
 permutation_test_plot
 
-ggsave("permutation_test.svg", plot = permutation_test_plot, width = 25, height = 20, units = "cm")
+#ggsave("permutation_test.svg", plot = permutation_test_plot, width = 25, height = 20, units = "cm")
 
 #############
 # Variables #
@@ -222,6 +253,8 @@ var <- get_pca_var(pca.results)
 
 # just loadings
 fviz_pca_var(pca.results)
+
+fviz_pca_ind(pca.results)
 
 # loadings and scores
 fviz_pca_biplot(pca.results)
@@ -258,19 +291,6 @@ fviz_pca_ind(pca.results,                                                       
              legend.title = "Groups") +  
   labs(title = "PCA") +
   theme(plot.title = element_text(hjust = 0.5))                                 # center the title
-
-
-# Score plots colored by category (FActoMineR) --------------------------------
-colour.score.plot <- fviz_pca_ind(pca.results,
-             addEllipses=TRUE,                                                  # these elipses are for categories
-             ellipse.level=0.95,
-             col.ind = as.factor(df$`Temperature (actual)`),                    # it is very important to do as. factor
-             palette = c("#00AFBB", "#E7B800", "#FC4E07")                       # if it were continous variabes no as.factor needed
-             ) +                 
-  labs(title = "Score plot colored by temperature") +
-  theme(plot.title = element_text(hjust = 0.5)) 
-
-colour.score.plot
 
 
 # RainbowSpectrum --------------------------------------------------------------
@@ -342,13 +362,11 @@ pc1.rainbow.plot <- ggplot(mean_spectra, aes(x = Wavenumber, y = Intensity, grou
        x = "Wavenumber",
        y = "Intensity",
        color = "Contribution to \n the PC1 (%)") +
-  scale_x_reverse() +
+  #scale_x_reverse() +
   ylim(ylim_min, ylim_max) +
   theme_minimal() +
   theme(plot.title = element_text(hjust = 0.5),
         legend.title = element_text(hjust = 0.5)) 
-
-pc1.rainbow.plot
 
 pc2.rainbow.plot <- ggplot(mean_spectra, aes(x = Wavenumber, y = Intensity, group = 1)) +
   geom_line(size = 1, aes(color = abs(contrib_df$Dim.2))) +
@@ -368,7 +386,7 @@ pc2.rainbow.plot <- ggplot(mean_spectra, aes(x = Wavenumber, y = Intensity, grou
        x = "Wavenumber",
        y = "Intensity",
        color = "Contribution to \n the PC2 (%)") +
-  scale_x_reverse() +
+  #scale_x_reverse() +
   ylim(ylim_min, ylim_max) +
   theme_minimal() +
   theme(plot.title = element_text(hjust = 0.5),
@@ -392,7 +410,7 @@ pc3.rainbow.plot <- ggplot(mean_spectra, aes(x = Wavenumber, y = Intensity, grou
        x = "Wavenumber",
        y = "Intensity",
        color = "Contribution to \n the PC3 (%)") +
-  scale_x_reverse() +
+  #scale_x_reverse() +
   ylim(ylim_min, ylim_max) +
   theme_minimal() +
   theme(plot.title = element_text(hjust = 0.5),
@@ -416,9 +434,9 @@ pc4.rainbow.plot <- ggplot(mean_spectra, aes(x = Wavenumber, y = Intensity, grou
        x = "Wavenumber",
        y = "Intensity",
        color = "Contribution to \n the PC4 (%)") +
-  scale_x_reverse() +
+  #scale_x_reverse() +
   ylim(ylim_min, ylim_max) +
-  theme_minimal() +
+  theme_minimal() +s
   theme(plot.title = element_text(hjust = 0.5),
         legend.title = element_text(hjust = 0.5)) 
 
@@ -430,7 +448,7 @@ combine.rainbow <- grid.arrange(pc1.rainbow.plot,
                                 pc4.rainbow.plot,
                                 ncol = 1)
 
-# Save the plot
+# Save the plothttp://127.0.0.1:31339/graphics/65b8f076-501a-4552-a012-6854b72b5107.png
 #ggsave("rainbow_plot.svg", plot = combine.rainbow, width = 21, height = 29.7, units = "cm")
 
 

@@ -19,6 +19,11 @@ percent.test <- 0.2
 # Scale the dataset
 lda.df[, 2] <- scale(lda.df[, 2])
 
+lda.df[ , apply(lda.df, 2, function(x) !any(is.na(x)))]
+lda.df <- lda.df[-2]
+
+View(lda.df)
+
 # Check mean and standard deviation
 scaled.mean <- apply(lda.df[, 2], 2, mean) # should be realy small value
 scaled.sd <- apply(lda.df[, 2], 2, sd)   # should be 1
