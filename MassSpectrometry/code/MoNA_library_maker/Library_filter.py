@@ -21,7 +21,7 @@ def ijson_extract_inchi(file_path, list_file_name):
             if prefix.endswith('.compound.item.inchi') and event == 'string' and value.strip():
                 inchi_list.append(value)
                 value_num = value_num + 1
-                print(value_num, " spectra appended to main list of InChI")
+                print(value_num, " InChI appended to the list")
 
     with open(list_file_name, 'w') as file:
         for inchi in inchi_list:
@@ -37,7 +37,7 @@ def list_cleaner(list_file_name, cleaned_file_name):
             if line.startswith("InChI="):
                 outfile.write(line)
 
-    print("\nFiltered lines saved to", cleaned_file_name)
+    print("\nCleaned InChI saved to", cleaned_file_name)
 
 
 # Function for selecting compounds of interest based on InChI string
@@ -50,19 +50,18 @@ def InChI_selector(cleaned_file_name, ioi_file_name):
                 ioi_no += + 1
                 print("Found InChI of interest! ", ioi_no)
 
+    print("InChI search done!")
+
+
 # Function for decimal encoder needed for writing dictionaries to .json
-# Custom JSON encoder to handle Decimal objects
-
-
 class DecimalEncoder(json.JSONEncoder):
     def default(self, obj):
         if isinstance(obj, Decimal):
             return float(obj)  # or str(obj) if you prefer strings
         return super(DecimalEncoder, self).default(obj)
 
+
 # Function for filtering library
-
-
 def library_filter(file_path, ioi_file_name, coi_file_name):
     try:
 
@@ -71,9 +70,12 @@ def library_filter(file_path, ioi_file_name, coi_file_name):
 
             matchings = []
 
+            print("InChI of interest list opened")
+
         with open(file_path, 'rb') as file:
             parser = ijson.items(file, 'item')
             entry_num = 0
+            print("Opening library...")
             for entry in parser:
                 if 'compound' in entry:
                     for compound in entry['compound']:
@@ -89,8 +91,9 @@ def library_filter(file_path, ioi_file_name, coi_file_name):
             for matched in matchings:
                 file.write(json.dumps(matched, cls=DecimalEncoder) + '\n')
                 matched_no += 1
-                print("Writing... ", "(", matched_no, ")")
+                print("Writing spectra... ", "(", matched_no, ")")
 
+        print("Done!")
         return matchings, inchi_set
 
     except Exception as e:
