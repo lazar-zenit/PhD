@@ -11,3 +11,8 @@ SpectralTool/.Rhistory
 SpectralTool/SpectralTool.Rproj
 *.Rproj
 SpectralTool/SpectralTool.Rproj
+MassSpectrometry/datasets/MoNA/inchi_list.txt
+MassSpectrometry/datasets/MoNA/inchi_list_clean.txt
+MassSpectrometry/datasets/MoNA/inchi_list_ioi.txt
+MassSpectrometry/datasets/MoNA/library_coi.json
+MassSpectrometry/datasets/MoNA/MoNA-export-MassBank.json
