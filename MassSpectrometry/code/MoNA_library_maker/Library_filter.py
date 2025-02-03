@@ -105,11 +105,11 @@ def library_filter(file_path, ioi_file_name, coi_file_name):
 # Inputs
 
 # File path of library
-file_path = "D:/PhD backup/MoNA/Full library/MoNA JSON/MoNA-export-All_Spectra-json/MoNA-export-All_Spectra.json"
+file_path = "C:/Users/Lenovo/Documents/Programiranje/PhD/MassSpectrometry/datasets/MoNA/MoNA-export-MassBank.json"
 
 # Folder path of outputs
 output_path = Path(
-    "D:/PhD backup/MoNA/Full library/MoNA JSON/MoNA-export-All_Spectra-json")
+    "C:/Users/Lenovo/Documents/Programiranje/PhD/MassSpectrometry/datasets/MoNA")
 
 # Filename for list of all InChI from library
 list_file_name = output_path / "inchi_list.txt"
