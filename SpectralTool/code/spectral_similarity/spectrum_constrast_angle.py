@@ -1,12 +1,13 @@
-# import libraries
+# Import libraries
 import numpy as np
 import pandas as pd
 from sklearn.metrics.pairwise import cosine_similarity
 import matplotlib.pyplot as plt
 
 
-# Function for importing .csv as dictionary of vectors
-def import_spectra(FILEPATH):
+def import_spectra(filepath):
+    '''Function imports .csv file of spectral data in transposed table and
+    outputs dictionary of vectors'''
 
     # Handle file errors
     try:
@@ -32,6 +33,9 @@ def import_spectra(FILEPATH):
 
 
 def spectral_contrast_angle_matrix(sample_data):
+    '''Calculates cosine similarity and spectral contrast angle matrix from
+    imported data'''
+
     # Error handling
     if not isinstance(sample_data, dict) or len(sample_data) == 0:
         print("Error! Variable is not dictionary or has lenght of 0.")
