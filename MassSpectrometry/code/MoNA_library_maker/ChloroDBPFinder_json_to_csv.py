@@ -4,8 +4,8 @@ import pandas as pd
 
 
 # User input
-JSON_PATH = "C:/Users/Lenovo/Documents/Programiranje/PhD/MassSpectrometry/datasets/MoNA/library_coi.json"
-OUTPUT_FOLDER = "C:/Users/Lenovo/Documents/Programiranje/PhD/MassSpectrometry/datasets/MoNA"
+JSON_PATH = "D:/PhD backup/MoNA/Full library/MoNA JSON/MoNA-export-All_Spectra-json/library_coi.json"
+OUTPUT_FOLDER = "D:/PhD backup/MoNA/Full library/MoNA JSON/MoNA-export-All_Spectra-json"
 
 
 # Open.json file
@@ -31,24 +31,27 @@ ms2_mz_all = []
 ms2_int_all = []
 found = 0
 not_found = 0
-
+comp_no = 0
 
 # Iterate over every line
 for entry in parsed_data:
 
     # Extract parts of dictionary that are of interest
-    compound = entry.get("compound")
+    compound = entry.get("compound")[0]
     metaData = entry.get("metaData")
     spectrum = entry.get("spectrum")
+    comp_no += 1
 
+    print("Compound number: ", comp_no)
     # Process only MS2 spectra
     if [item for item in metaData if item["value"] == "MS2"]:
 
         # Compound name
-        name = compound[0].get("names")[0].get("name")
+        # name = compound[0].get("names")[0].get("name") - works only with clean MassBank spectra
+        name = [item.get(["name"][0]) for item in compound["names"]]
 
         # Wheather spectrum is in silico or not
-        computed = compound[0].get("computed")
+        computed = compound.get("computed", "Unknown")
 
         # Precursor type
         precursor_type = next(
@@ -70,7 +73,7 @@ for entry in parsed_data:
 
         # Molecular formula
         formula = next(
-            (item["value"] for item in compound[0].get(
+            (item["value"] for item in compound.get(
                 "metaData") if item["name"] == "molecular formula"),
             "Not available")
 

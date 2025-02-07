@@ -17,3 +17,5 @@ MassSpectrometry/datasets/MoNA/inchi_list_ioi.txt
 MassSpectrometry/datasets/MoNA/library_coi.json
 MassSpectrometry/datasets/MoNA/MoNA-export-MassBank.json
 MassSpectrometry/datasets/MoNA/output_library.csv
+SpectralTool/datasets/central_points_good_mva_transposed.csv
+MassSpectrometry/datasets/MoNA/output_library - Copy.csv
